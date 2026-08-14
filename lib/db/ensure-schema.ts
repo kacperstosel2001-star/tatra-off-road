@@ -36,36 +36,29 @@ function schemaStatements(sql: string): string[] {
 }
 
 async function ensureSerialDefaults(client: pg.Client) {
-  await client.query(`
-    DO $$
-    DECLARE
-      r record;
-    BEGIN
-      FOR r IN
-        SELECT c.relname AS table_name
-        FROM pg_class c
-        JOIN pg_namespace n ON n.oid = c.relnamespace
-        WHERE n.nspname = 'public' AND c.relkind = 'r'
-      LOOP
-        IF EXISTS (
-          SELECT 1 FROM pg_class s
-          JOIN pg_namespace ns ON ns.oid = s.relnamespace
-          WHERE ns.nspname = 'public' AND s.relkind = 'S' AND s.relname = r.table_name || '_id_seq'
-        ) THEN
-          EXECUTE format(
-            'ALTER TABLE public.%I ALTER COLUMN id SET DEFAULT nextval(%L::regclass)',
-            r.table_name,
-            'public.' || r.table_name || '_id_seq'
-          );
-        END IF;
-      END LOOP;
-    END $$;
-  `)
+  const { rows } = await client.query<{ relname: string }>(
+    `SELECT c.relname
+     FROM pg_class c
+     JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname = 'public' AND c.relkind = 'S' AND c.relname LIKE '%_id_seq'`,
+  )
+
+  for (const { relname } of rows) {
+    const table = relname.replace(/_id_seq$/, '')
+    if (!/^[a-z0-9_]+$/.test(table)) continue
+    try {
+      await client.query(
+        `ALTER TABLE public.${table} ALTER COLUMN id SET DEFAULT nextval('public.${relname}'::regclass)`,
+      )
+    } catch (error) {
+      console.error('[tatra] serial default skip', table, error)
+    }
+  }
+  console.log('[tatra] serial defaults attached', rows.length)
 }
 
 async function markMigration(client: pg.Client) {
   try {
-    await ensureSerialDefaults(client)
     await client.query(
       `INSERT INTO public.payload_migrations (id, name, batch)
        SELECT nextval('public.payload_migrations_id_seq'), '20260814_initial', 1
@@ -90,6 +83,7 @@ export async function applyInitialSchema() {
       `SELECT to_regclass('public.users') IS NOT NULL AS present`,
     )
     if (asBool(existing.rows[0]?.present)) {
+      await ensureSerialDefaults(client)
       await markMigration(client)
       return
     }
@@ -111,6 +105,7 @@ export async function applyInitialSchema() {
         `SELECT to_regclass('public.users') IS NOT NULL AS present`,
       )
       if (asBool(stillMissing.rows[0]?.present)) {
+        await ensureSerialDefaults(client)
         await markMigration(client)
         return
       }
@@ -132,6 +127,7 @@ export async function applyInitialSchema() {
       if (!asBool(created.rows[0]?.present)) {
         throw new Error('Schema SQL ran but table "users" still does not exist')
       }
+      await ensureSerialDefaults(client)
       await markMigration(client)
     } finally {
       await client.query(`SELECT pg_advisory_unlock($1)`, [LOCK_ID])

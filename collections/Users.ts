@@ -7,6 +7,14 @@ export const Users: CollectionConfig = {
     group: 'System',
   },
   auth: true,
+  hooks: {
+    afterError: [
+      async ({ error, result }) => {
+        console.error('[tatra] users afterError', error)
+        return result
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',
