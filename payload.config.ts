@@ -2,7 +2,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { buildConfig } from 'payload'
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { pl } from '@payloadcms/translations/languages/pl'
 
@@ -30,6 +30,20 @@ import { seedSiteContent } from './lib/content/seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const databaseUrl = process.env.DATABASE_URL || ''
+if (!databaseUrl || databaseUrl.startsWith('file:')) {
+  throw new Error(
+    'DATABASE_URL must be a Postgres connection string, e.g. postgres://user:pass@host:5432/tatra_off_road',
+  )
+}
+
+const sslRequired =
+  process.env.DATABASE_SSL !== 'false' &&
+  (process.env.DATABASE_SSL === 'true' ||
+    /sslmode=require/i.test(databaseUrl) ||
+    /\.supabase\.co/i.test(databaseUrl) ||
+    process.env.NODE_ENV === 'production')
 
 export default buildConfig({
   admin: {
@@ -70,11 +84,14 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URL || `file:${path.resolve(dirname, 'payload.db')}`,
+  db: postgresAdapter({
+    pool: {
+      connectionString: databaseUrl,
+      max: 10,
+      ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
     },
-    push: true,
+    // Hostinger / first deploy: create tables automatically. Set PAYLOAD_PUSH=false after schema is stable.
+    push: process.env.PAYLOAD_PUSH !== 'false',
   }),
   sharp,
   i18n: {
