@@ -27,6 +27,7 @@ import { CennikPage } from './globals/pages/CennikPage'
 import { AboutPage } from './globals/pages/AboutPage'
 import { ContactPage } from './globals/pages/ContactPage'
 import { seedSiteContent } from './lib/content/seed'
+import { ensurePostgresSchema } from './lib/db/ensure-schema'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -104,7 +105,8 @@ export default buildConfig({
       max: 10,
       ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
     },
-    // Hostinger / first deploy: create tables automatically. Set PAYLOAD_PUSH=false after schema is stable.
+    // Payload ignores `push` when NODE_ENV=production (Hostinger build/start).
+    // Schema is created in onInit via ensurePostgresSchema.
     push: process.env.PAYLOAD_PUSH !== 'false',
   }),
   sharp,
@@ -121,6 +123,9 @@ export default buildConfig({
     fallback: true,
   },
   onInit: async (payload) => {
+    // next build prerenders in parallel workers — do not touch the DB there.
+    if (process.env.NEXT_PHASE === 'phase-production-build') return
+    await ensurePostgresSchema(payload)
     await seedSiteContent(payload)
   },
 })

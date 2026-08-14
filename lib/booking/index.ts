@@ -117,17 +117,21 @@ export async function getBookingSettings() {
 }
 
 export async function getActiveTrips(locale: 'pl' | 'en' = 'pl'): Promise<TripDTO[]> {
-  const payload = await getPayloadClient()
-  const result = await payload.find({
-    collection: 'trips',
-    locale,
-    fallbackLocale: 'pl',
-    where: { active: { equals: true } },
-    sort: 'sortOrder',
-    limit: 100,
-    overrideAccess: true,
-  })
-  return result.docs.map((doc) => tripToDTO(doc as any))
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'trips',
+      locale,
+      fallbackLocale: 'pl',
+      where: { active: { equals: true } },
+      sort: 'sortOrder',
+      limit: 100,
+      overrideAccess: true,
+    })
+    return result.docs.map((doc) => tripToDTO(doc as any))
+  } catch {
+    return []
+  }
 }
 
 export async function getTripById(id: string | number): Promise<TripDTO | null> {

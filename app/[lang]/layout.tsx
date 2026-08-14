@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Anton, Barlow_Condensed, Barlow_Semi_Condensed, JetBrains_Mono } from 'next/font/google'
-import { absoluteUrl, hreflangAlternates, supportedLocales } from '@/lib/i18n'
+import { absoluteUrl, hreflangAlternates } from '@/lib/i18n'
 import { contentService } from '@/services/content.service'
 import { ContactProvider } from '@/components/providers/ContactProvider'
 import '../globals.css'
@@ -33,9 +33,7 @@ const jetBrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
-export function generateStaticParams() {
-  return supportedLocales.map((lang) => ({ lang }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
