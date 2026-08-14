@@ -38,12 +38,26 @@ if (!databaseUrl || databaseUrl.startsWith('file:')) {
   )
 }
 
+function stripSearchParam(url: string, key: string) {
+  return url
+    .replace(new RegExp(`([?&])${key}=[^&]*`, 'gi'), '$1')
+    .replace(/\?&/, '?')
+    .replace(/[?&]$/, '')
+    .replace(/\?&/, '?')
+}
+
 const sslRequired =
   process.env.DATABASE_SSL !== 'false' &&
   (process.env.DATABASE_SSL === 'true' ||
-    /sslmode=require/i.test(databaseUrl) ||
-    /\.supabase\.co/i.test(databaseUrl) ||
+    /sslmode=/i.test(databaseUrl) ||
+    /supabase\.(co|com)/i.test(databaseUrl) ||
     process.env.NODE_ENV === 'production')
+
+// pg v8 treats sslmode=require as verify-full, which fails on Supabase's chain.
+let connectionString = stripSearchParam(stripSearchParam(databaseUrl, 'sslmode'), 'uselibpqcompat')
+if (sslRequired) {
+  connectionString += `${connectionString.includes('?') ? '&' : '?'}sslmode=no-verify`
+}
 
 export default buildConfig({
   admin: {
@@ -86,7 +100,7 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: databaseUrl,
+      connectionString,
       max: 10,
       ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
     },
