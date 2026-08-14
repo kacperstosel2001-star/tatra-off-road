@@ -21,23 +21,18 @@ function asBool(value: unknown) {
 }
 
 function schemaStatements(sql: string): string[] {
-  return sql
-    .split(';')
-    .map((chunk) =>
-      chunk
-        .split('\n')
-        .map((line) => line.trimEnd())
-        .filter((line) => line.trim() && !line.trim().startsWith('--'))
-        .join('\n')
-        .trim(),
-    )
-    .filter((statement) => {
-      if (!statement) return false
-      const upper = statement.toUpperCase()
-      if (upper.startsWith('SET ')) return false
-      if (upper.startsWith('SELECT PG_CATALOG.SET_CONFIG')) return false
-      return true
+  const withoutComments = sql
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trim()
+      return trimmed && !trimmed.startsWith('--')
     })
+    .join('\n')
+
+  return withoutComments
+    .split(';')
+    .map((chunk) => chunk.trim())
+    .filter((statement) => /^(CREATE|ALTER|INSERT)\b/i.test(statement))
 }
 
 async function markMigration(client: pg.Client) {
