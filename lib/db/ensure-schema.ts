@@ -57,6 +57,31 @@ async function ensureSerialDefaults(client: pg.Client) {
   console.log('[tatra] serial defaults attached', rows.length)
 }
 
+async function runIgnore(client: pg.Client, sql: string) {
+  try {
+    await client.query(sql)
+  } catch (error) {
+    const code = (error as { code?: string }).code
+    if (code && IGNORE_SQL_CODES.has(code)) return
+    console.error('[tatra] constraint skip', sql.slice(0, 120), error)
+  }
+}
+
+async function ensureUsersConstraints(client: pg.Client) {
+  await runIgnore(
+    client,
+    `ALTER TABLE public.users ADD CONSTRAINT users_pkey PRIMARY KEY (id)`,
+  )
+  await runIgnore(
+    client,
+    `CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx ON public.users USING btree (email)`,
+  )
+  const pk = await client.query(
+    `SELECT conname FROM pg_constraint WHERE conrelid = 'public.users'::regclass AND contype = 'p'`,
+  )
+  console.log('[tatra] users primary keys', pk.rows.map((row) => row.conname))
+}
+
 async function markMigration(client: pg.Client) {
   try {
     await client.query(
@@ -84,6 +109,7 @@ export async function applyInitialSchema() {
     )
     if (asBool(existing.rows[0]?.present)) {
       await ensureSerialDefaults(client)
+      await ensureUsersConstraints(client)
       await markMigration(client)
       return
     }
@@ -106,6 +132,7 @@ export async function applyInitialSchema() {
       )
       if (asBool(stillMissing.rows[0]?.present)) {
         await ensureSerialDefaults(client)
+        await ensureUsersConstraints(client)
         await markMigration(client)
         return
       }
@@ -128,6 +155,7 @@ export async function applyInitialSchema() {
         throw new Error('Schema SQL ran but table "users" still does not exist')
       }
       await ensureSerialDefaults(client)
+      await ensureUsersConstraints(client)
       await markMigration(client)
     } finally {
       await client.query(`SELECT pg_advisory_unlock($1)`, [LOCK_ID])

@@ -10,7 +10,8 @@ export const Users: CollectionConfig = {
   hooks: {
     afterError: [
       ({ error }) => {
-        console.error('[tatra] users afterError', error)
+        const cause = (error as Error & { cause?: { code?: string; detail?: string; message?: string } }).cause
+        console.error('[tatra] users afterError', error.message, cause?.code, cause?.detail || cause?.message || cause)
       },
     ],
   },
