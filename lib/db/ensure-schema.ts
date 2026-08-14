@@ -2,6 +2,10 @@ import pg from 'pg'
 import { postgresClientConfig } from './connection'
 import { INITIAL_SCHEMA_SQL } from './initial-schema'
 
+const PgClient =
+  (pg as unknown as { Client?: typeof pg.Client }).Client ||
+  (pg as unknown as { default?: { Client?: typeof pg.Client } }).default?.Client
+
 const LOCK_ID = 88442201
 const IGNORE_SQL_CODES = new Set([
   '42P07', // duplicate_table
@@ -47,7 +51,11 @@ async function markMigration(client: pg.Client) {
 }
 
 export async function applyInitialSchema() {
-  const client = new pg.Client(postgresClientConfig())
+  if (!PgClient) {
+    throw new Error('pg.Client is not available in this runtime')
+  }
+  const client = new PgClient(postgresClientConfig())
+  console.log('[tatra] schema sql bytes', INITIAL_SCHEMA_SQL.length)
   await client.connect()
   try {
     const existing = await client.query(
@@ -85,6 +93,7 @@ export async function applyInitialSchema() {
         } catch (error) {
           const code = (error as { code?: string }).code
           if (code && IGNORE_SQL_CODES.has(code)) continue
+          console.error('[tatra] schema statement failed', statement.slice(0, 180), error)
           throw error
         }
       }

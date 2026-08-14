@@ -25,7 +25,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  output: 'standalone',
+  experimental: {
+    instrumentationHook: true,
+  },
   transpilePackages: ['motion'],
   serverExternalPackages: ['drizzle-kit', 'drizzle-kit/api', 'pg'],
   webpack: (config, { dev }) => {
@@ -52,6 +54,10 @@ config.outputFileTracingIncludes = {
     ...(config.outputFileTracingIncludes?.['**/*'] || []),
     'drizzle-kit',
     'drizzle-kit/api',
+    'pg',
+    'pg-pool',
+    'pg-protocol',
+    'pg-types',
   ],
 }
 

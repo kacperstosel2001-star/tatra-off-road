@@ -102,6 +102,7 @@ export default buildConfig({
       await applyInitialSchema()
       await seedSiteContent(payload)
     } catch (error) {
+      console.error('[tatra] Database bootstrap failed', error)
       payload.logger.error({ err: error }, 'Database bootstrap failed')
     }
   },
