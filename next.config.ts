@@ -25,24 +25,37 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    instrumentationHook: true,
-  },
+  output: 'standalone',
   transpilePackages: ['motion'],
-  serverExternalPackages: ['drizzle-kit', 'drizzle-kit/api', 'pg'],
-  webpack: (config, { dev }) => {
+  serverExternalPackages: ['drizzle-kit', 'drizzle-kit/api', 'pg', 'pg-pool', 'pgpass'],
+  webpack: (config, { isServer, dev }) => {
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
         ignored: /.*/,
       }
     }
+
+    if (isServer) {
+      const externals = Array.isArray(config.externals) ? config.externals : []
+      config.externals = [...externals, 'pg', 'pg-pool', 'pgpass', 'pg-protocol']
+    } else {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        pg: false,
+        pgpass: false,
+      }
+    }
+
     return config
   },
 }
 
 const config = withPayload(nextConfig)
 
-// Payload excludes drizzle-kit from standalone tracing; we need it to create tables on first boot.
 const excludes = config.outputFileTracingExcludes?.['**/*'] || []
 config.outputFileTracingExcludes = {
   ...config.outputFileTracingExcludes,
@@ -52,8 +65,6 @@ config.outputFileTracingIncludes = {
   ...config.outputFileTracingIncludes,
   '**/*': [
     ...(config.outputFileTracingIncludes?.['**/*'] || []),
-    'drizzle-kit',
-    'drizzle-kit/api',
     'pg',
     'pg-pool',
     'pg-protocol',
