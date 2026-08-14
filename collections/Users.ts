@@ -9,9 +9,8 @@ export const Users: CollectionConfig = {
   auth: true,
   hooks: {
     afterError: [
-      async ({ error, result }) => {
+      ({ error }) => {
         console.error('[tatra] users afterError', error)
-        return result
       },
     ],
   },
