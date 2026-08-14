@@ -125,7 +125,12 @@ export default buildConfig({
   onInit: async (payload) => {
     // next build prerenders in parallel workers — do not touch the DB there.
     if (process.env.NEXT_PHASE === 'phase-production-build') return
-    await ensurePostgresSchema(payload)
-    await seedSiteContent(payload)
+    try {
+      await ensurePostgresSchema(payload)
+      await seedSiteContent(payload)
+    } catch (error) {
+      payload.logger.error({ err: error }, 'Database bootstrap failed')
+      throw error
+    }
   },
 })

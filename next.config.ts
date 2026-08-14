@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   transpilePackages: ['motion'],
+  serverExternalPackages: ['drizzle-kit', 'drizzle-kit/api', 'pg'],
   webpack: (config, { dev }) => {
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
@@ -37,4 +38,21 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPayload(nextConfig)
+const config = withPayload(nextConfig)
+
+// Payload excludes drizzle-kit from standalone tracing; we need it to create tables on first boot.
+const excludes = config.outputFileTracingExcludes?.['**/*'] || []
+config.outputFileTracingExcludes = {
+  ...config.outputFileTracingExcludes,
+  '**/*': excludes.filter((item) => !String(item).includes('drizzle-kit')),
+}
+config.outputFileTracingIncludes = {
+  ...config.outputFileTracingIncludes,
+  '**/*': [
+    ...(config.outputFileTracingIncludes?.['**/*'] || []),
+    'drizzle-kit',
+    'drizzle-kit/api',
+  ],
+}
+
+export default config
