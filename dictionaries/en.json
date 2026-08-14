@@ -1,0 +1,113 @@
+{
+  "common": {
+    "book": "Book",
+    "bookNow": "Book Now",
+    "call": "Call",
+    "checkAvailability": "Check availability",
+    "askForDate": "Ask for date",
+    "sendInquiry": "Send inquiry"
+  },
+  "nav": {
+    "home": "Home",
+    "whyUs": "Why Us",
+    "fleet": "Fleet",
+    "routes": "Routes",
+    "pricing": "Pricing",
+    "gallery": "Gallery",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "news": "News",
+    "privacy": "Privacy Policy",
+    "about": "About Us"
+  },
+  "hero": {
+    "quickBook": "Quick Booking",
+    "checkDate": "Check date",
+    "date": "Date",
+    "persons": "Persons",
+    "package": "Package",
+    "phone": "Phone",
+    "watchVideo": "Watch Video",
+    "finePrint": "We respond within 30 minutes · 8:00–20:00"
+  },
+  "trust": {
+    "insurance": "Insurance included",
+    "response": "Response time",
+    "rating": "Google Rating (127)",
+    "newFleet": "Newest Can-Am fleet",
+    "cancellation": "Free cancellation"
+  },
+  "why": {
+    "eyebrow": "Why Us",
+    "headline": "Not our first<br/>trip. It's our<br/>everyday.",
+    "subheadline": "You don't need to know the route or the equipment. We know both - you come for the adventure, we take care of the rest.",
+    "tag": "Certified instructors"
+  },
+  "fleet": {
+    "eyebrow": "Our Fleet",
+    "headline": "Equipment<br/>that does the job",
+    "subheadline": "Regularly serviced Can-Am 2025 - power for one and comfort for two. Zero compromises off-road.",
+    "power": "Power",
+    "drive": "Drive",
+    "seats": "Seats",
+    "year": "Year"
+  },
+  "routes": {
+    "eyebrow": "Routes",
+    "headline": "Three trails,<br/>one Podhale",
+    "subheadline": "Every trip takes a different route - adapted to the weather, season, and group level."
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "headline": "Choose<br/>your trip",
+    "subheadline": "Prices per person. Helmet, protectors, fuel, and NNW insurance always included.",
+    "highlight": "Most popular"
+  },
+  "process": {
+    "eyebrow": "How it works",
+    "headline": "Four steps,<br/>one adventure",
+    "step": "STEP"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "headline": "See how<br/>it looks",
+    "subheadline": "Real shots from the trails - no beautification, no Photoshop. This is what our trips look like."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "headline": "Before<br/>you book",
+    "subheadline": "The most common questions we hear before the first trip. Can't find it here? Call us.",
+    "calloutTag": "Direct contact",
+    "calloutTitle": "Have another question?",
+    "calloutDesc": "We respond by phone within 30 minutes from 8:00 to 20:00."
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "headline": "Book<br/>your date",
+    "subheadline": "Call or fill out the form - we'll get back to you within 30 minutes to confirm the date and package.",
+    "formTitle": "Booking form",
+    "name": "Full name",
+    "message": "Message (optional)",
+    "finePrint": "We respond by phone within 30 minutes, 8:00–20:00."
+  },
+  "footer": {
+    "brand": "Tatra Off-Road",
+    "headline": "Podhale <span>Your</span><br/>adventure",
+    "desc": "Quad trips through the forests and trails of Podhale. Legal routes, experienced guides, latest Can-Am equipment.",
+    "nav": "Navigation",
+    "info": "Information",
+    "contact": "Contact",
+    "copyright": "Copyright © 2018–2026 Tatra Off-Road ®. All rights reserved.",
+    "madeWith": "Made with 🖤 in Podhale"
+  },
+  "news": {
+    "eyebrow": "Our Blog",
+    "headline": "News & Guides",
+    "readMore": "Read more",
+    "back": "Back to news",
+    "published": "Published"
+  },
+  "breadcrumbs": {
+    "home": "Home"
+  }
+}

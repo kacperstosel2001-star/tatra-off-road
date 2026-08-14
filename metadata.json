@@ -1,0 +1,6 @@
+{
+  "name": "Tatra Off-Road",
+  "description": "Wyprawy quadami przez lasy i szlaki Podhala.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

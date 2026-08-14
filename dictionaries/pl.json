@@ -1,0 +1,113 @@
+{
+  "common": {
+    "book": "Zarezerwuj",
+    "bookNow": "Zarezerwuj teraz",
+    "call": "Zadzwoń",
+    "checkAvailability": "Sprawdź dostępność",
+    "askForDate": "Zapytaj o termin",
+    "sendInquiry": "Wyślij zapytanie"
+  },
+  "nav": {
+    "home": "Strona główna",
+    "whyUs": "Dlaczego My",
+    "fleet": "Flota",
+    "routes": "Trasy",
+    "pricing": "Cennik",
+    "gallery": "Galeria",
+    "faq": "FAQ",
+    "contact": "Kontakt",
+    "news": "Aktualności",
+    "privacy": "Polityka prywatności",
+    "about": "O nas"
+  },
+  "hero": {
+    "quickBook": "Szybka Rezerwacja",
+    "checkDate": "Sprawdź termin",
+    "date": "Data",
+    "persons": "Osób",
+    "package": "Pakiet",
+    "phone": "Telefon",
+    "watchVideo": "Zobacz jak jeździmy",
+    "finePrint": "Odpowiadamy w ciągu 30 minut · 8:00–20:00"
+  },
+  "trust": {
+    "insurance": "Ubezpieczenie NNW",
+    "response": "Odpowiedź na zapytanie",
+    "rating": "Ocena na Google (127)",
+    "newFleet": "Najnowsza flota Can-Am",
+    "cancellation": "Odwołanie bez opłat"
+  },
+  "why": {
+    "eyebrow": "Dlaczego My",
+    "headline": "Nie pierwsza<br/>wyprawa. Nasza<br/>codzienność.",
+    "subheadline": "Nie musisz znać trasy ani sprzętu. My znamy jedno i drugie — Ty przyjeżdżasz po przygodę, my dbamy o resztę.",
+    "tag": "Certyfikowani instruktorzy"
+  },
+  "fleet": {
+    "eyebrow": "Nasza Flota",
+    "headline": "Sprzęt,<br/>który robi robotę",
+    "subheadline": "Regularnie serwisowane Can-Am 2025 — moc dla jednej osoby i komfort dla pary. Zero kompromisów w terenie.",
+    "power": "Moc",
+    "drive": "Napęd",
+    "seats": "Osób",
+    "year": "Rok"
+  },
+  "routes": {
+    "eyebrow": "Trasy",
+    "headline": "Trzy szlaki,<br/>jedno Podhale",
+    "subheadline": "Każda wyprawa prowadzi inną trasą — dopasowaną do pogody, pory roku i poziomu grupy."
+  },
+  "pricing": {
+    "eyebrow": "Cennik",
+    "headline": "Wybierz<br/>swój wyjazd",
+    "subheadline": "Ceny za osobę. Kask, ochraniacze, paliwo i ubezpieczenie NNW zawsze w cenie.",
+    "highlight": "Najczęściej wybierana"
+  },
+  "process": {
+    "eyebrow": "Jak to działa",
+    "headline": "Cztery kroki,<br/>jedna wyprawa",
+    "step": "KROK"
+  },
+  "gallery": {
+    "eyebrow": "Galeria",
+    "headline": "Zobacz jak<br/>to wygląda",
+    "subheadline": "Prawdziwe kadry z tras — bez upiększania, bez Photoshopa. Tak wyglądają nasze wyprawy."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "headline": "Zanim<br/>zarezerwujesz",
+    "subheadline": "Najczęstsze pytania, które słyszymy przed pierwszą wyprawą. Nie ma nic na liście? Zadzwoń.",
+    "calloutTag": "Bezpośredni kontakt",
+    "calloutTitle": "Masz inne pytanie?",
+    "calloutDesc": "Odpowiadamy telefonicznie w ciągu 30 minut w godzinach 8:00–20:00."
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "headline": "Zarezerwuj<br/>swój termin",
+    "subheadline": "Zadzwoń lub wypełnij formularz — odezwiemy się w ciągu 30 minut, żeby potwierdzić termin i pakiet.",
+    "formTitle": "Formularz rezerwacji",
+    "name": "Imię i nazwisko",
+    "message": "Wiadomość (opcjonalnie)",
+    "finePrint": "Odpowiadamy telefonicznie w ciągu 30 minut, 8:00–20:00."
+  },
+  "footer": {
+    "brand": "Tatra Off-Road",
+    "headline": "Podhale <span>Twoja</span><br/>przygoda",
+    "desc": "Wyprawy quadami przez lasy i szlaki Podhala. Legalne trasy, doświadczeni przewodnicy, najnowszy sprzęt Can-Am.",
+    "nav": "Nawigacja",
+    "info": "Informacje",
+    "contact": "Kontakt",
+    "copyright": "Copyright © 2018–2026 Tatra Off-Road ®. Wszelkie prawa zastrzeżone.",
+    "madeWith": "Made with 🖤 in Podhale"
+  },
+  "news": {
+    "eyebrow": "Nasz Blog",
+    "headline": "Aktualności i Poradniki",
+    "readMore": "Czytaj więcej",
+    "back": "Wróć do aktualności",
+    "published": "Opublikowano"
+  },
+  "breadcrumbs": {
+    "home": "Strona główna"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "common": {
+    "book": "Buchen",
+    "bookNow": "Jetzt buchen",
+    "call": "Anrufen",
+    "checkAvailability": "Verfügbarkeit prüfen",
+    "askForDate": "Termin anfragen",
+    "sendInquiry": "Anfrage senden"
+  },
+  "nav": {
+    "whyUs": "Warum Wir",
+    "fleet": "Flotte",
+    "routes": "Routen",
+    "pricing": "Preise",
+    "gallery": "Galerie",
+    "faq": "FAQ",
+    "contact": "Kontakt",
+    "news": "Neuigkeiten",
+    "privacy": "Datenschutz",
+    "about": "Über uns"
+  },
+  "hero": {
+    "quickBook": "Schnellbuchung",
+    "checkDate": "Termin prüfen",
+    "date": "Datum",
+    "persons": "Personen",
+    "package": "Paket",
+    "phone": "Telefon",
+    "watchVideo": "Video ansehen",
+    "finePrint": "Wir antworten innerhalb von 30 Minuten · 8:00–20:00"
+  },
+  "trust": {
+    "insurance": "Versicherung inklusive",
+    "response": "Antwortzeit",
+    "rating": "Google Bewertung (127)",
+    "newFleet": "Neueste Can-Am Flotte",
+    "cancellation": "Kostenlose Stornierung"
+  },
+  "why": {
+    "eyebrow": "Warum Wir",
+    "headline": "Nicht unsere erste<br/>Reise. Es ist unser<br/>Alltag.",
+    "subheadline": "Sie müssen weder die Route noch die Ausrüstung kennen. Wir kennen beides - Sie kommen für das Abenteuer, wir kümmern uns um den Rest.",
+    "tag": "Zertifizierte Instruktoren"
+  },
+  "fleet": {
+    "eyebrow": "Unsere Flotte",
+    "headline": "Ausrüstung,<br/>die ihren Job macht",
+    "subheadline": "Regelmäßig gewartete Can-Am 2025 - Power für einen und Komfort für zwei. Keine Kompromisse im Gelände.",
+    "power": "Leistung",
+    "drive": "Antrieb",
+    "seats": "Sitze",
+    "year": "Jahr"
+  },
+  "routes": {
+    "eyebrow": "Routen",
+    "headline": "Drei Pfade,<br/>ein Podhale",
+    "subheadline": "Jeder Ausflug nimmt eine andere Route - angepasst an Wetter, Jahreszeit und Gruppenniveau."
+  },
+  "pricing": {
+    "eyebrow": "Preise",
+    "headline": "Wählen Sie<br/>Ihre Reise",
+    "subheadline": "Preise pro Person. Helm, Protektoren, Benzin und NNW-Versicherung immer inklusive.",
+    "highlight": "Am beliebtesten"
+  },
+  "process": {
+    "eyebrow": "Wie es funktioniert",
+    "headline": "Vier Schritte,<br/>ein Abenteuer",
+    "step": "SCHRITT"
+  },
+  "gallery": {
+    "eyebrow": "Galerie",
+    "headline": "Sehen Sie,<br/>wie es aussieht",
+    "subheadline": "Echte Aufnahmen von den Trails - keine Verschönerung, kein Photoshop. So sehen unsere Reisen aus."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "headline": "Bevor<br/>Sie buchen",
+    "subheadline": "Die häufigsten Fragen vor der ersten Reise. Nicht dabei? Rufen Sie uns an.",
+    "calloutTag": "Direkter Kontakt",
+    "calloutTitle": "Haben Sie eine andere Frage?",
+    "calloutDesc": "Wir antworten telefonisch innerhalb von 30 Minuten von 8:00 bis 20:00 Uhr."
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "headline": "Buchen Sie<br/>Ihren Termin",
+    "subheadline": "Rufen Sie an oder füllen Sie das Formular aus - wir melden uns innerhalb von 30 Minuten, um den Termin und das Paket zu bestätigen.",
+    "formTitle": "Buchungsformular",
+    "name": "Vor- und Nachname",
+    "message": "Nachricht (optional)",
+    "finePrint": "Wir antworten telefonisch innerhalb von 30 Minuten, 8:00–20:00."
+  },
+  "footer": {
+    "brand": "Tatra Off-Road",
+    "headline": "Podhale <span>Dein</span><br/>Abenteuer",
+    "desc": "Quad-Ausflüge durch die Wälder und Pfade von Podhale. Legale Routen, erfahrene Guides, neueste Can-Am Ausrüstung.",
+    "nav": "Navigation",
+    "info": "Informationen",
+    "contact": "Kontakt",
+    "copyright": "Copyright © 2018–2026 Tatra Off-Road ®. Alle Rechte vorbehalten.",
+    "madeWith": "Made with 🖤 in Podhale"
+  },
+  "news": {
+    "eyebrow": "Unser Blog",
+    "headline": "Neuigkeiten & Ratgeber",
+    "readMore": "Weiterlesen",
+    "back": "Zurück zu Neuigkeiten",
+    "published": "Veröffentlicht"
+  },
+  "breadcrumbs": {
+    "home": "Startseite"
+  }
+}
