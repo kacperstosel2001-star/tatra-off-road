@@ -28,37 +28,12 @@ import { AboutPage } from './globals/pages/AboutPage'
 import { ContactPage } from './globals/pages/ContactPage'
 import { seedSiteContent } from './lib/content/seed'
 import { applyInitialSchema } from './lib/db/ensure-schema'
+import { postgresConnection } from './lib/db/connection'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const databaseUrl = process.env.DATABASE_URL || ''
-if (!databaseUrl || databaseUrl.startsWith('file:')) {
-  throw new Error(
-    'DATABASE_URL must be a Postgres connection string, e.g. postgres://user:pass@host:5432/tatra_off_road',
-  )
-}
-
-function stripSearchParam(url: string, key: string) {
-  return url
-    .replace(new RegExp(`([?&])${key}=[^&]*`, 'gi'), '$1')
-    .replace(/\?&/, '?')
-    .replace(/[?&]$/, '')
-    .replace(/\?&/, '?')
-}
-
-const sslRequired =
-  process.env.DATABASE_SSL !== 'false' &&
-  (process.env.DATABASE_SSL === 'true' ||
-    /sslmode=/i.test(databaseUrl) ||
-    /supabase\.(co|com)/i.test(databaseUrl) ||
-    process.env.NODE_ENV === 'production')
-
-// pg v8 treats sslmode=require as verify-full, which fails on Supabase's chain.
-let connectionString = stripSearchParam(stripSearchParam(databaseUrl, 'sslmode'), 'uselibpqcompat')
-if (sslRequired) {
-  connectionString += `${connectionString.includes('?') ? '&' : '?'}sslmode=no-verify`
-}
+const { connectionString, sslRequired } = postgresConnection()
 
 export default buildConfig({
   admin: {
