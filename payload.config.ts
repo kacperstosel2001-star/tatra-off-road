@@ -80,17 +80,8 @@ export default buildConfig({
       max: 10,
       ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
     },
-    // Payload ignores `push` when NODE_ENV=production. Apply committed SQL instead.
-    push: process.env.PAYLOAD_PUSH !== 'false',
-    prodMigrations: [
-      {
-        name: '20260814_initial',
-        up: async () => {
-          await applyInitialSchema()
-        },
-        down: async () => {},
-      },
-    ],
+    // Payload ignores `push` when NODE_ENV=production. Schema is applied in onInit.
+    push: false,
   }),
   sharp,
   i18n: {
@@ -106,14 +97,12 @@ export default buildConfig({
     fallback: true,
   },
   onInit: async (payload) => {
-    // next build prerenders in parallel workers — do not touch the DB there.
     if (process.env.NEXT_PHASE === 'phase-production-build') return
     try {
       await applyInitialSchema()
       await seedSiteContent(payload)
     } catch (error) {
       payload.logger.error({ err: error }, 'Database bootstrap failed')
-      throw error
     }
   },
 })

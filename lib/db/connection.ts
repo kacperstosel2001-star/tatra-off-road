@@ -35,6 +35,7 @@ export function postgresClientConfig(): ClientConfig {
   const { connectionString, sslRequired } = postgresConnection()
   return {
     connectionString,
+    connectionTimeoutMillis: 10000,
     ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
   }
 }

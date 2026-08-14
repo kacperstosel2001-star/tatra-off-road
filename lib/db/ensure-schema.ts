@@ -60,7 +60,7 @@ export async function applyInitialSchema() {
 
     const lock = await client.query(`SELECT pg_try_advisory_lock($1) AS locked`, [LOCK_ID])
     if (!asBool(lock.rows[0]?.locked)) {
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 20; i++) {
         await new Promise((resolve) => setTimeout(resolve, 500))
         const again = await client.query(
           `SELECT to_regclass('public.users') IS NOT NULL AS present`,
