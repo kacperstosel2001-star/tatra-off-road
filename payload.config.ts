@@ -27,7 +27,7 @@ import { CennikPage } from './globals/pages/CennikPage'
 import { AboutPage } from './globals/pages/AboutPage'
 import { ContactPage } from './globals/pages/ContactPage'
 import { seedSiteContent } from './lib/content/seed'
-import { ensurePostgresSchema } from './lib/db/ensure-schema'
+import { applyInitialSchema } from './lib/db/ensure-schema'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -105,9 +105,17 @@ export default buildConfig({
       max: 10,
       ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
     },
-    // Payload ignores `push` when NODE_ENV=production (Hostinger build/start).
-    // Schema is created in onInit via ensurePostgresSchema.
+    // Payload ignores `push` when NODE_ENV=production. Apply committed SQL instead.
     push: process.env.PAYLOAD_PUSH !== 'false',
+    prodMigrations: [
+      {
+        name: '20260814_initial',
+        up: async () => {
+          await applyInitialSchema()
+        },
+        down: async () => {},
+      },
+    ],
   }),
   sharp,
   i18n: {
@@ -126,7 +134,7 @@ export default buildConfig({
     // next build prerenders in parallel workers — do not touch the DB there.
     if (process.env.NEXT_PHASE === 'phase-production-build') return
     try {
-      await ensurePostgresSchema(payload)
+      await applyInitialSchema()
       await seedSiteContent(payload)
     } catch (error) {
       payload.logger.error({ err: error }, 'Database bootstrap failed')

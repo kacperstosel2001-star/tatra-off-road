@@ -1,4 +1,5 @@
-import type { Payload } from 'payload'
+import pg from 'pg'
+import { INITIAL_SCHEMA_SQL } from './initial-schema'
 
 const LOCK_ID = 88442201
 
@@ -6,85 +7,74 @@ function asBool(value: unknown) {
   return value === true || value === 't' || value === 'true' || value === 1
 }
 
-function rowsOf(result: unknown): Record<string, unknown>[] {
-  if (Array.isArray(result)) return result as Record<string, unknown>[]
-  const rows = (result as { rows?: unknown })?.rows
-  return Array.isArray(rows) ? (rows as Record<string, unknown>[]) : []
+function clientConfig(): pg.ClientConfig {
+  const url = process.env.DATABASE_URL || ''
+  const sslRequired =
+    process.env.DATABASE_SSL !== 'false' &&
+    (process.env.DATABASE_SSL === 'true' ||
+      /sslmode=/i.test(url) ||
+      /supabase\.(co|com)/i.test(url) ||
+      process.env.NODE_ENV === 'production')
+
+  return {
+    connectionString: url,
+    ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
+  }
 }
 
-async function rawQuery(adapter: any, sql: string) {
-  return rowsOf(
-    await adapter.execute({
-      drizzle: adapter.drizzle,
-      raw: sql,
-    }),
-  )
-}
-
-async function tableExists(adapter: any, name: string) {
-  const rows = await rawQuery(
-    adapter,
-    `SELECT to_regclass('public.${name}') IS NOT NULL AS present`,
-  )
-  return asBool(rows[0]?.present)
-}
-
-async function loadPushSchema(adapter: any) {
-  if (typeof adapter?.requireDrizzleKit === 'function') {
-    try {
-      const kit = adapter.requireDrizzleKit()
-      if (typeof kit?.pushSchema === 'function') return kit.pushSchema
-    } catch {
-      // Standalone Next traces often omit drizzle-kit — fall through to direct import.
-    }
-  }
-  const kit = await import('drizzle-kit/api')
-  return kit.pushSchema
-}
-
-export async function ensurePostgresSchema(payload: Payload) {
-  const adapter = payload.db as any
-  if (typeof adapter?.execute !== 'function') {
-    throw new Error('Postgres adapter is not ready')
-  }
-
-  if (await tableExists(adapter, 'users')) return
-
-  let gotLock = false
-  for (let i = 0; i < 60; i++) {
-    if (await tableExists(adapter, 'users')) return
-    const rows = await rawQuery(adapter, `SELECT pg_try_advisory_lock(${LOCK_ID}) AS locked`)
-    if (asBool(rows[0]?.locked)) {
-      gotLock = true
-      break
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-
-  if (!gotLock) {
-    if (await tableExists(adapter, 'users')) return
-    throw new Error('Timed out waiting for Postgres schema to be created')
-  }
-
+export async function applyInitialSchema() {
+  const client = new pg.Client(clientConfig())
+  await client.connect()
   try {
-    if (await tableExists(adapter, 'users')) return
-
-    payload.logger.info('Creating Postgres schema (first boot)...')
-    const pushSchema = await loadPushSchema(adapter)
-    const { apply } = await pushSchema(
-      adapter.schema,
-      adapter.drizzle,
-      adapter.schemaName ? [adapter.schemaName] : undefined,
-      adapter.tablesFilter,
-      adapter.extensions?.postgis ? ['postgis'] : undefined,
+    const existing = await client.query(
+      `SELECT to_regclass('public.users') IS NOT NULL AS present`,
     )
-    await apply()
-
-    if (!(await tableExists(adapter, 'users'))) {
-      throw new Error('Schema push finished but table "users" still does not exist')
+    if (asBool(existing.rows[0]?.present)) {
+      await client.query(
+        `INSERT INTO public.payload_migrations (name, batch)
+         SELECT '20260814_initial', 1
+         WHERE NOT EXISTS (
+           SELECT 1 FROM public.payload_migrations WHERE name = '20260814_initial'
+         )`,
+      )
+      return
     }
-    payload.logger.info('Postgres schema ready.')
+
+    const lock = await client.query(`SELECT pg_try_advisory_lock($1) AS locked`, [LOCK_ID])
+    if (!asBool(lock.rows[0]?.locked)) {
+      for (let i = 0; i < 60; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+        const again = await client.query(
+          `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+        )
+        if (asBool(again.rows[0]?.present)) return
+      }
+      throw new Error('Timed out waiting for Postgres schema to be created')
+    }
+
+    try {
+      const stillMissing = await client.query(
+        `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+      )
+      if (asBool(stillMissing.rows[0]?.present)) return
+      await client.query(INITIAL_SCHEMA_SQL)
+      const created = await client.query(
+        `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+      )
+      if (!asBool(created.rows[0]?.present)) {
+        throw new Error('Schema SQL ran but table "users" still does not exist')
+      }
+      await client.query(
+        `INSERT INTO public.payload_migrations (name, batch)
+         SELECT '20260814_initial', 1
+         WHERE NOT EXISTS (
+           SELECT 1 FROM public.payload_migrations WHERE name = '20260814_initial'
+         )`,
+      )
+    } finally {
+      await client.query(`SELECT pg_advisory_unlock($1)`, [LOCK_ID])
+    }
   } finally {
-    await rawQuery(adapter, `SELECT pg_advisory_unlock(${LOCK_ID})`)
+    await client.end()
   }
 }
