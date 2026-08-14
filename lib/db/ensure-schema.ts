@@ -35,14 +35,47 @@ function schemaStatements(sql: string): string[] {
     .filter((statement) => /^(CREATE|ALTER|INSERT)\b/i.test(statement))
 }
 
+async function ensureSerialDefaults(client: pg.Client) {
+  await client.query(`
+    DO $$
+    DECLARE
+      r record;
+    BEGIN
+      FOR r IN
+        SELECT c.relname AS table_name
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relkind = 'r'
+      LOOP
+        IF EXISTS (
+          SELECT 1 FROM pg_class s
+          JOIN pg_namespace ns ON ns.oid = s.relnamespace
+          WHERE ns.nspname = 'public' AND s.relkind = 'S' AND s.relname = r.table_name || '_id_seq'
+        ) THEN
+          EXECUTE format(
+            'ALTER TABLE public.%I ALTER COLUMN id SET DEFAULT nextval(%L::regclass)',
+            r.table_name,
+            'public.' || r.table_name || '_id_seq'
+          );
+        END IF;
+      END LOOP;
+    END $$;
+  `)
+}
+
 async function markMigration(client: pg.Client) {
-  await client.query(
-    `INSERT INTO public.payload_migrations (name, batch)
-     SELECT '20260814_initial', 1
-     WHERE NOT EXISTS (
-       SELECT 1 FROM public.payload_migrations WHERE name = '20260814_initial'
-     )`,
-  )
+  try {
+    await ensureSerialDefaults(client)
+    await client.query(
+      `INSERT INTO public.payload_migrations (id, name, batch)
+       SELECT nextval('public.payload_migrations_id_seq'), '20260814_initial', 1
+       WHERE NOT EXISTS (
+         SELECT 1 FROM public.payload_migrations WHERE name = '20260814_initial'
+       )`,
+    )
+  } catch (error) {
+    console.error('[tatra] payload_migrations insert skipped', error)
+  }
 }
 
 export async function applyInitialSchema() {
