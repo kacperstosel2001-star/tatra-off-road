@@ -105,7 +105,12 @@
     "headline": "News & Guides",
     "readMore": "Read more",
     "back": "Back to news",
-    "published": "Published"
+    "published": "Published",
+    "sidebarEyebrow": "Book a ride",
+    "sidebarTitle": "Hit the trail",
+    "sidebarDesc": "Can-Am 2025 fleet, legal Podhale trails, guide included. Deposit online, rest on site.",
+    "sidebarRecent": "More from the blog",
+    "empty": "New posts are coming soon."
   },
   "breadcrumbs": {
     "home": "Home"

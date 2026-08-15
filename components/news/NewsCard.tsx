@@ -9,7 +9,7 @@ export function NewsCard({ article, lang, dict }: { article: NewsDTO; lang: stri
   return (
     <Link href={localePath(lang, `/news/${article.slug}`)} className="group block h-full flex flex-col relative overflow-hidden bg-[rgba(245,241,231,0.02)] border border-[rgba(245,241,231,0.06)] hover:border-[rgba(245,241,231,0.15)] transition-colors duration-300">
       <div className="relative h-[240px] w-full overflow-hidden">
-        <Image src={article.image} alt={article.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+        <Image src={article.image} alt={article.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
       <div className="p-6 lg:p-8 flex-grow flex flex-col">
         <div className="text-orange text-[12px] font-label uppercase tracking-[0.15em] mb-4">

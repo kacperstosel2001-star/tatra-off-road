@@ -105,7 +105,12 @@
     "headline": "Aktualności i Poradniki",
     "readMore": "Czytaj więcej",
     "back": "Wróć do aktualności",
-    "published": "Opublikowano"
+    "published": "Opublikowano",
+    "sidebarEyebrow": "Rezerwacja",
+    "sidebarTitle": "Ruszaj w teren",
+    "sidebarDesc": "Can-Am 2025, legalne trasy Podhala i przewodnik w cenie. Zaliczka online, reszta na miejscu.",
+    "sidebarRecent": "Więcej z bloga",
+    "empty": "Wkrótce pojawią się tu nowe wpisy."
   },
   "breadcrumbs": {
     "home": "Strona główna"

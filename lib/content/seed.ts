@@ -8,6 +8,127 @@ async function collectionEmpty(payload: Payload, slug: string) {
   return result.totalDocs === 0
 }
 
+const SAMPLE_NEWS_POSTS = [
+  {
+    title: 'Nowe Can-Am Outlander 2025 już we flocie!',
+    slug: 'nowe-can-am-outlander-2025',
+    excerpt:
+      'Do naszej floty dołączyły właśnie najnowsze modele Can-Am Outlander 2025. Sprawdź, co się zmieniło i dlaczego warto je przetestować.',
+    content:
+      '<p>W tym sezonie stawiamy na najwyższą jakość i niezawodność. Modele Can-Am Outlander z rocznika 2025 charakteryzują się ulepszonym zawieszeniem oraz jeszcze wydajniejszym układem chłodzenia.</p><p>Zapraszamy na jazdę próbną — rezerwacja online zajmuje kilka minut, a przewodnik prowadzi całą trasę.</p>',
+    publishedAt: '2026-06-15T10:00:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Nowe Can-Am Outlander 2025 | Tatra Off-Road',
+      description: 'Najnowsze modele Can-Am we flocie Tatra Off-Road.',
+    },
+  },
+  {
+    title: 'Jak ubrać się na wyprawę quadami w górach?',
+    slug: 'jak-ubrac-sie-na-wyprawe-quadami',
+    excerpt:
+      'Przygotowanie do wyprawy to klucz do udanej zabawy. Zebraliśmy najważniejsze wskazówki dotyczące stroju w zależności od pory roku.',
+    content:
+      '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p><p>Latem sprawdzą się oddychające warstwy, zimą — ciepła kurtka i rękawice. Na miejscu zawsze masz briefing przed startem.</p>',
+    publishedAt: '2026-05-20T14:30:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1596395356956-61b6cb4ec678?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
+      description: 'Poradnik: jak dobrać strój na wycieczkę quadami w górach.',
+    },
+  },
+  {
+    title: 'Bezpieczeństwo na szlaku — co warto wiedzieć',
+    slug: 'bezpieczenstwo-na-szlaku',
+    excerpt:
+      'Kask, briefing i tempo grupy to podstawa. Opisujemy, jak dbamy o bezpieczeństwo na każdej trasie.',
+    content:
+      '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami, a przewodnik dostosowuje tempo do grupy.</p><p>Ubezpieczenie NNW jest wliczone w pakiet — dzięki temu możesz skupić się na widokach i adrenaliny.</p>',
+    publishedAt: '2026-07-02T09:00:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Bezpieczeństwo na szlaku | Tatra Off-Road',
+      description: 'Jak wygląda bezpieczeństwo na wyprawach quadowych Tatra Off-Road.',
+    },
+  },
+  {
+    title: 'Najlepsze trasy Podhala na lato 2026',
+    slug: 'najlepsze-trasy-podhala-lato-2026',
+    excerpt:
+      'Lasy, grzbiety i widoki na Tatry — zestawienie tras, które najczęściej wybieracie w sezonie letnim.',
+    content:
+      '<p>Latem najczęściej rezerwujecie trasy leśne wokół Zębu oraz dłuższe wyprawy z panoramą Tatr. Dopasowujemy dystans do pogody i poziomu grupy.</p><p>Jeśli jedziesz pierwszy raz, polecamy krótszy pakiet intro — potem łatwo wrócić na dłuższy szlak.</p>',
+    publishedAt: '2026-07-18T11:00:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Najlepsze trasy Podhala 2026 | Tatra Off-Road',
+      description: 'Polecane trasy quadowe na Podhalu w sezonie letnim.',
+    },
+  },
+  {
+    title: 'Wyprawa firmowa — integracja na quadach',
+    slug: 'wyprawa-firmowa-integracja-na-quadach',
+    excerpt:
+      'Szukacie nietuzinkowej integracji? Opisujemy, jak wygląda dzień firmowy z Can-Am i przewodnikiem.',
+    content:
+      '<p>Organizujemy pakiety dla zespołów: briefing, wspólna trasa, przerwa kawowa i zdjęcia z wyprawy. Sprzęt 1- i 2-osobowy, tempo dopasowane do grupy.</p><p>Rezerwację firmową najłatwiej ustalić telefonicznie albo przez formularz online — pomożemy dobrać termin i liczbę quadów.</p>',
+    publishedAt: '2026-08-01T08:30:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Integracja firmowa na quadach | Tatra Off-Road',
+      description: 'Wyprawy quadowe dla firm na Podhalu — Can-Am i przewodnik.',
+    },
+  },
+  {
+    title: 'Sezon zimowy: quady po śniegu na Podhalu',
+    slug: 'sezon-zimowy-quady-po-sniegu',
+    excerpt:
+      'Zimą trasy wyglądają zupełnie inaczej. Sprawdź, kiedy jeździmy i jak przygotować się do śnieżnej przygody.',
+    content:
+      '<p>Przy odpowiedniej pokrywie śnieżnej wyruszamy na wybrane odcinki z większym naciskiem na bezpieczeństwo i krótsze dystanse.</p><p>Ciepły strój to must-have — resztę ochrony zapewniamy na miejscu. Terminy zimowe znikają szybko, więc warto rezerwować z wyprzedzeniem.</p>',
+    publishedAt: '2026-01-12T12:00:00.000Z',
+    imageUrl:
+      'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    meta: {
+      title: 'Quady zimą na Podhalu | Tatra Off-Road',
+      description: 'Zimowe wyprawy quadowe Tatra Off-Road — przygotowanie i trasy.',
+    },
+  },
+] as const
+
+async function ensureNewsPosts(payload: Payload) {
+  let created = 0
+  for (const post of SAMPLE_NEWS_POSTS) {
+    const existing = await payload.find({
+      collection: 'news-posts',
+      where: { slug: { equals: post.slug } },
+      limit: 1,
+      overrideAccess: true,
+    })
+    if (existing.totalDocs > 0) continue
+
+    await payload.create({
+      collection: 'news-posts',
+      locale: 'pl',
+      overrideAccess: true,
+      data: {
+        ...post,
+        author: 'Tatra Off-Road Team',
+        active: true,
+      } as any,
+    })
+    created += 1
+  }
+  if (created > 0) {
+    payload.logger.info(`Seeded ${created} sample news posts`)
+  }
+}
+
 export async function seedSiteContent(payload: Payload) {
   try {
     if (await collectionEmpty(payload, 'features')) {
@@ -306,50 +427,7 @@ export async function seedSiteContent(payload: Payload) {
       }
     }
 
-    if (await collectionEmpty(payload, 'news-posts')) {
-      await payload.create({
-        collection: 'news-posts',
-        locale: 'pl',
-        data: {
-          title: 'Nowe Can-Am Outlander 2025 już we flocie!',
-          slug: 'nowe-can-am-outlander-2025',
-          excerpt:
-            'Do naszej floty dołączyły właśnie najnowsze modele Can-Am Outlander 2025. Sprawdź, co się zmieniło i dlaczego warto je przetestować.',
-          content:
-            '<p>W tym sezonie stawiamy na najwyższą jakość i niezawodność. Modele Can-Am Outlander z rocznika 2025 charakteryzują się ulepszonym zawieszeniem oraz jeszcze wydajniejszym układem chłodzenia.</p>',
-          author: 'Tatra Off-Road Team',
-          publishedAt: '2026-06-15T10:00:00.000Z',
-          imageUrl:
-            'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
-          meta: {
-            title: 'Nowe Can-Am Outlander 2025 | Tatra Off-Road',
-            description: 'Najnowsze modele Can-Am we flocie Tatra Off-Road.',
-          },
-          active: true,
-        } as any,
-      })
-      await payload.create({
-        collection: 'news-posts',
-        locale: 'pl',
-        data: {
-          title: 'Jak ubrać się na wyprawę quadami w górach?',
-          slug: 'jak-ubrac-sie-na-wyprawe-quadami',
-          excerpt:
-            'Przygotowanie do wyprawy to klucz do udanej zabawy. Zebraliśmy najważniejsze wskazówki dotyczące stroju w zależności od pory roku.',
-          content:
-            '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p>',
-          author: 'Tatra Off-Road Team',
-          publishedAt: '2026-05-20T14:30:00.000Z',
-          imageUrl:
-            'https://images.unsplash.com/photo-1596395356956-61b6cb4ec678?fm=jpg&q=80&w=1400&auto=format&fit=crop',
-          meta: {
-            title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
-            description: 'Poradnik: jak dobrać strój na wycieczkę quadami w górach.',
-          },
-          active: true,
-        } as any,
-      })
-    }
+    await ensureNewsPosts(payload)
 
     const home = await payload.findGlobal({ slug: 'home-page', locale: 'pl' })
     if (!(home as any)?.hero?.headline) {
