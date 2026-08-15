@@ -29,6 +29,7 @@ import { ContactPage } from './globals/pages/ContactPage'
 import { seedFirstAdmin, seedSiteContent } from './lib/content/seed'
 import { applyInitialSchema } from './lib/db/ensure-schema'
 import { postgresConnection } from './lib/db/connection'
+import { createMediaStoragePlugin } from './lib/storage/s3'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -69,6 +70,7 @@ export default buildConfig({
     AboutPage,
     ContactPage,
   ],
+  plugins: [...createMediaStoragePlugin()],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'tatra-off-road-dev-secret',
   typescript: {

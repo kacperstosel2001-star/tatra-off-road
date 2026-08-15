@@ -18,7 +18,7 @@ export const Media: CollectionConfig = {
   admin: {
     group: 'System',
     description:
-      'Zdjęcia i filmy (MP4/WebM). Na Hostingerze pliki znikają po redeployu — do trwałej treści lepiej używaj pól „URL obrazu”. Unikaj nazw ze spacją na początku.',
+      'Zdjęcia i filmy (MP4/WebM). Przy skonfigurowanym Supabase Storage (S3_*) pliki przeżywają redeploy Hostingera. Bez S3 lokalny dysk Hostingera czyści uploady po deployu.',
   },
   access: {
     read: () => true,
@@ -58,7 +58,6 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
-    // Relative to process.cwd() — avoid importing node:path here (breaks Next client graph).
     staticDir: 'media',
     mimeTypes: [
       'image/*',

@@ -4,7 +4,7 @@ function isUnusableMediaUrl(url: string, filename?: string | null) {
   const nameFromMeta = typeof filename === 'string' ? filename : ''
   if (nameFromMeta && nameFromMeta !== nameFromMeta.trim()) return true
 
-  // Local Payload uploads live on ephemeral Hostinger disk and commonly 404 after redeploy.
+  // Legacy local Payload paths — files are gone after Hostinger redeploy unless re-uploaded to S3.
   if (/\/api\/media\/file\//i.test(url)) return true
 
   try {
@@ -26,14 +26,17 @@ export function resolveMediaUrl(media: MediaLike, fallbackUrl?: string | null): 
     filename = 'filename' in media ? (media.filename as string | null | undefined) : undefined
   }
 
-  if (url && isUnusableMediaUrl(url, filename)) {
-    url = ''
+  // Prefer durable https URLs (Supabase public object URL, Unsplash, etc.)
+  if (url && /^https?:\/\//i.test(url) && !isUnusableMediaUrl(url, filename)) {
+    return url
   }
-
-  if (url) return url
 
   if (typeof fallbackUrl === 'string' && fallbackUrl.trim()) {
     return fallbackUrl.trim()
+  }
+
+  if (url && !isUnusableMediaUrl(url, filename)) {
+    return url
   }
 
   return ''
