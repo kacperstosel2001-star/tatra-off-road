@@ -18,12 +18,19 @@ export const Media: CollectionConfig = {
   admin: {
     group: 'System',
     description:
-      'Zdjęcia i filmy (MP4/WebM). Na Hostingerze pliki znikają po redeployu — do trwałej treści lepiej używaj pól „URL obrazu”, albo podepnij storage S3. Unikaj nazw ze spacją na początku.',
+      'Zdjęcia i filmy (MP4/WebM). Na Hostingerze pliki znikają po redeployu — do trwałej treści lepiej używaj pól „URL obrazu”. Unikaj nazw ze spacją na początku.',
   },
   access: {
     read: () => true,
   },
   hooks: {
+    beforeOperation: [
+      ({ operation, req }) => {
+        if ((operation === 'create' || operation === 'update') && req.file?.name) {
+          req.file.name = sanitizeUploadFilename(req.file.name)
+        }
+      },
+    ],
     afterChange: [
       ({ doc, operation }) => {
         console.log('[tatra] media saved', {
@@ -53,7 +60,6 @@ export const Media: CollectionConfig = {
   upload: {
     // Relative to process.cwd() — avoid importing node:path here (breaks Next client graph).
     staticDir: 'media',
-    filename: ({ filename }) => sanitizeUploadFilename(filename),
     mimeTypes: [
       'image/*',
       'video/mp4',
