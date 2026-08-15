@@ -33,7 +33,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p><p>Latem sprawdzą się oddychające warstwy, zimą — ciepła kurtka i rękawice. Na miejscu zawsze masz briefing przed startem.</p>',
     publishedAt: '2026-05-20T14:30:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1596395356956-61b6cb4ec678?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
     meta: {
       title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
       description: 'Poradnik: jak dobrać strój na wycieczkę quadami w górach.',
@@ -48,7 +48,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami, a przewodnik dostosowuje tempo do grupy.</p><p>Ubezpieczenie NNW jest wliczone w pakiet — dzięki temu możesz skupić się na widokach i adrenaliny.</p>',
     publishedAt: '2026-07-02T09:00:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?fm=jpg&q=80&w=1400&auto=format&fit=crop',
     meta: {
       title: 'Bezpieczeństwo na szlaku | Tatra Off-Road',
       description: 'Jak wygląda bezpieczeństwo na wyprawach quadowych Tatra Off-Road.',

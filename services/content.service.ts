@@ -60,7 +60,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
       '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p>',
     publishedAt: '2026-05-20T14:30:00.000Z',
     image:
-      'https://images.unsplash.com/photo-1596395356956-61b6cb4ec678?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
@@ -76,7 +76,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
       '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami.</p>',
     publishedAt: '2026-07-02T09:00:00.000Z',
     image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?fm=jpg&q=80&w=1400&auto=format&fit=crop',
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Bezpieczeństwo na szlaku | Tatra Off-Road',

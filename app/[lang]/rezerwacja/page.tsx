@@ -45,8 +45,8 @@ export default async function BookingPage({ params }: { params: Promise<{ lang: 
           ]}
           dict={dict}
         />
-        <section className="py-10 lg:py-14 px-6 lg:px-14">
-          <div className="wrap">
+        <section className="py-6 sm:py-10 lg:py-14 px-4 sm:px-6 lg:px-14">
+          <div className="wrap !px-0 sm:!px-6 lg:!px-14">
             <BookingWizard lang={locale} />
           </div>
         </section>

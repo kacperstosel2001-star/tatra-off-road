@@ -130,11 +130,11 @@ export function Hero({ dict, content, lang = 'pl' }: { dict: any; content: HeroD
             </a>
           </div>
 
-          <div className="grid grid-cols-3 gap-9 pt-8 border-t border-[rgba(245,241,231,0.16)] w-fit">
+          <div className="grid grid-cols-3 gap-3 sm:gap-9 pt-8 border-t border-[rgba(245,241,231,0.16)] w-full sm:w-fit">
             {(content.stats || []).map((stat, i) => (
-              <div key={i}>
-                <div className="font-display text-[38px] text-orange leading-none">{stat.value}</div>
-                <div className="font-label uppercase tracking-[0.1em] text-[11px] text-stone mt-[6px] font-semibold">
+              <div key={i} className="min-w-0">
+                <div className="font-display text-[28px] sm:text-[38px] text-orange leading-none">{stat.value}</div>
+                <div className="font-label uppercase tracking-[0.08em] sm:tracking-[0.1em] text-[10px] sm:text-[11px] text-stone mt-[6px] font-semibold leading-snug">
                   {stat.label}
                 </div>
               </div>
@@ -142,9 +142,9 @@ export function Hero({ dict, content, lang = 'pl' }: { dict: any; content: HeroD
           </div>
         </div>
 
-        <div className="bg-[rgba(15,13,10,0.55)] backdrop-blur-[20px] border border-[rgba(245,241,231,0.15)] p-8 relative before:content-[''] before:absolute before:top-0 before:left-0 before:w-[60px] before:h-[4px] before:bg-orange">
+        <div className="bg-[rgba(15,13,10,0.55)] backdrop-blur-[20px] border border-[rgba(245,241,231,0.15)] p-5 sm:p-8 relative before:content-[''] before:absolute before:top-0 before:left-0 before:w-[60px] before:h-[4px] before:bg-orange">
           <div className="text-orange mb-2 label">{panel.eyebrow || dict.hero.quickBook}</div>
-          <h3 className="font-display font-normal text-[26px] uppercase m-0 mb-4 tracking-[0.005em]">
+          <h3 className="font-display font-normal text-[22px] sm:text-[26px] uppercase m-0 mb-4 tracking-[0.005em]">
             {panel.title}
           </h3>
           <ul className="m-0 mb-7 p-0 list-none grid gap-3 text-[14.5px] text-[#E7E1D0]">

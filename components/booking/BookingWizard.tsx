@@ -288,19 +288,36 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-8 lg:gap-10 items-start">
-      <form onSubmit={onSubmit} className="booking-shell">
-        <div className="mb-8">
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:gap-10 items-start pb-[calc(var(--site-sticky-cta)+1rem)] xl:pb-0">
+      <form onSubmit={onSubmit} className="booking-shell min-w-0">
+        {previewPrice ? (
+          <div className="booking-mobile-summary">
+            <div className="min-w-0">
+              <p className="m-0 text-[11px] font-label uppercase tracking-[0.1em] text-orange">
+                Zaliczka teraz
+              </p>
+              <p className="m-0 font-display text-[22px] leading-none truncate">
+                {selectedTrip?.name || 'Wyprawa'}
+              </p>
+            </div>
+            <div className="text-right flex-none">
+              <div className="font-display text-[28px] leading-none text-orange">{previewPrice.deposit} zł</div>
+              <div className="text-[11px] opacity-70">z {previewPrice.total} zł</div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mb-6 sm:mb-8">
           <p className="eyebrow m-0 mb-3">Rezerwacja online</p>
-          <h1 className="font-display text-[34px] lg:text-[44px] uppercase m-0 tracking-[0.005em] leading-[0.95]">
+          <h1 className="font-display text-[28px] sm:text-[34px] lg:text-[44px] uppercase m-0 tracking-[0.005em] leading-[0.95]">
             Zarezerwuj wyprawę
           </h1>
-          <p className="text-[#4a4638] text-[15.5px] mt-3 mb-0 max-w-[52ch]">
+          <p className="text-[#4a4638] text-[14.5px] sm:text-[15.5px] mt-3 mb-0 max-w-[52ch]">
             4 krótkie kroki. Zaliczkę opłacisz bezpiecznie online — resztę na miejscu.
           </p>
         </div>
 
-        <nav aria-label="Postęp rezerwacji" className="booking-steps mb-8">
+        <nav aria-label="Postęp rezerwacji" className="booking-steps mb-6 sm:mb-8">
           {STEPS.map((s, i) => {
             const done = i < stepIndex
             const active = i === stepIndex
@@ -335,9 +352,9 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
                   onClick={() => setTripId(String(trip.id))}
                   className={`booking-choice text-left ${active ? 'is-active' : ''}`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-display text-[22px] lg:text-[26px] uppercase leading-none mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                      <div className="font-display text-[20px] sm:text-[22px] lg:text-[26px] uppercase leading-[1.05] mb-2">
                         {trip.name}
                       </div>
                       <div className="flex flex-wrap gap-3 text-[13px] text-[#4a4638]">
@@ -352,7 +369,7 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
                         <p className="m-0 mt-2 text-[14px] text-[#4a4638]">{trip.description}</p>
                       ) : null}
                     </div>
-                    <div className="text-right flex-none">
+                    <div className="text-left sm:text-right flex-none">
                       <div className="font-mono text-[18px] font-semibold">{trip.price1} zł</div>
                       <div className="text-[11px] uppercase tracking-[0.08em] text-stone">od / 1 os.</div>
                     </div>
@@ -543,7 +560,7 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
 
         {error ? <p className="text-[#b32d2e] m-0 mt-5 text-[14px]" role="alert">{error}</p> : null}
 
-        <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-stone-line">
+        <div className="booking-actions">
           {stepIndex > 0 ? (
             <button type="button" className="btn btn-ghost" onClick={goBack}>
               <ArrowLeft size={16} /> Wstecz
@@ -562,14 +579,44 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
           ) : (
             <button type="submit" className="btn btn-primary ml-auto" disabled={submitting || !canGoNext()}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-              Przejdź do płatności
+              <span className="sm:hidden">Do płatności</span>
+              <span className="hidden sm:inline">Przejdź do płatności</span>
               <ArrowRight size={16} />
             </button>
           )}
         </div>
       </form>
 
-      <aside className="booking-aside xl:sticky xl:top-[calc(var(--site-header)+var(--site-tread)+1rem)]">
+      <div className="xl:hidden">
+        <div className="bg-paper border border-stone-line p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Info size={16} className="text-orange" />
+            <h3 className="font-label text-[12px] uppercase tracking-[0.1em] font-bold m-0">
+              Warto wiedzieć
+            </h3>
+          </div>
+          <div className="grid gap-2">
+            {BOOKING_FAQ.map((item, i) => (
+              <button
+                key={item.q}
+                type="button"
+                className="text-left border border-stone-line bg-snow px-3 py-3"
+                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                aria-expanded={openFaq === i}
+              >
+                <div className="font-label text-[12px] uppercase tracking-[0.06em] font-bold">
+                  {item.q}
+                </div>
+                {openFaq === i ? (
+                  <p className="m-0 mt-2 text-[13.5px] text-[#4a4638] leading-snug">{item.a}</p>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside className="booking-aside hidden xl:block xl:sticky xl:top-[calc(var(--site-header)+var(--site-tread)+1rem)]">
         <div className="bg-ink text-snow p-6 lg:p-7">
           <p className="font-label text-[11px] uppercase tracking-[0.12em] text-orange m-0 mb-3">
             Podsumowanie

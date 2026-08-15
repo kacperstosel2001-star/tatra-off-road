@@ -187,9 +187,9 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 items-start">
-      <div className="booking-shell">
-        <div className="flex items-center gap-2 mb-6 text-[12px] font-label uppercase tracking-[0.1em] text-stone">
+    <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-6 lg:gap-8 items-start pb-[calc(var(--site-sticky-cta)+1rem)] lg:pb-0">
+      <div className="booking-shell min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 text-[11px] sm:text-[12px] font-label uppercase tracking-[0.08em] sm:tracking-[0.1em] text-stone">
           <span className="text-ink font-bold">1. Rezerwacja</span>
           <span aria-hidden>→</span>
           <span className="text-orange font-bold">2. Płatność</span>
@@ -197,10 +197,12 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           <span>3. Potwierdzenie</span>
         </div>
 
-        <div className="flex items-start justify-between gap-4 mb-2">
-          <h1 className="font-display text-[36px] lg:text-[44px] uppercase m-0 leading-none">Opłać zaliczkę</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
+          <h1 className="font-display text-[28px] sm:text-[36px] lg:text-[44px] uppercase m-0 leading-[0.95]">
+            Opłać zaliczkę
+          </h1>
           {cashbillMode === 'test' ? (
-            <span className="font-label text-[11px] uppercase tracking-[0.1em] px-3 py-1.5 bg-ink text-snow flex-none">
+            <span className="font-label text-[11px] uppercase tracking-[0.1em] px-3 py-1.5 bg-ink text-snow self-start flex-none">
               Tryb testowy
             </span>
           ) : null}
@@ -346,7 +348,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
               </p>
             ) : null}
 
-            <button type="submit" disabled={paying} className="btn btn-primary justify-center">
+            <button type="submit" disabled={paying} className="btn btn-primary justify-center w-full sm:w-auto">
               {paying ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
               Zapłać zaliczkę {booking.depositAmount ?? 0} zł
             </button>

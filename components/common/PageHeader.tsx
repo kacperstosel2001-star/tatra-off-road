@@ -42,23 +42,22 @@ export function PageHeader({ title, description, breadcrumbs, dict }: PageHeader
 
       <div className="relative z-10 max-w-[1320px] mx-auto px-6 lg:px-[56px]">
         {/* Breadcrumbs */}
-        <nav className="mb-6 flex items-center text-[13px] text-stone font-label tracking-[0.1em] uppercase">
+        <nav className="mb-5 sm:mb-6 flex flex-wrap items-center gap-y-1 text-[12px] sm:text-[13px] text-stone font-label tracking-[0.08em] sm:tracking-[0.1em] uppercase">
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={idx}>
-              {idx > 0 && <span className="mx-3 opacity-40">/</span>}
+              {idx > 0 && <span className="mx-2 sm:mx-3 opacity-40">/</span>}
               {crumb.href ? (
                 <Link href={crumb.href} className="hover:text-orange transition-colors">
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-orange">{crumb.label}</span>
+                <span className="text-orange line-clamp-2">{crumb.label}</span>
               )}
             </React.Fragment>
           ))}
         </nav>
         
-        {/* Title & Desc — header spacer already accounts for fixed chrome */}
-        <h1 className="font-display text-[36px] sm:text-[40px] lg:text-[64px] text-snow uppercase leading-[0.92] tracking-[0.02em] mb-5 lg:mb-6">
+        <h1 className="font-display text-[32px] sm:text-[40px] lg:text-[64px] text-snow uppercase leading-[0.92] tracking-[0.02em] mb-4 lg:mb-6 break-words">
           {title}
         </h1>
         {description && (
