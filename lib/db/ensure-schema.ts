@@ -14,6 +14,7 @@ const IGNORE_SQL_CODES = new Set([
   '42P16', // invalid_table_definition (e.g. second primary key)
   '42723', // duplicate_function
   '23505', // unique_violation
+  '23503', // foreign_key_violation (orphans when adding FK)
   '42P01', // undefined_table (index on table that will exist later)
 ])
 
@@ -184,9 +185,28 @@ async function createMissingTables(client: pg.Client) {
   }
 }
 
+async function cleanupOrphanLockedRels(client: pg.Client) {
+  try {
+    const result = await client.query(
+      `DELETE FROM public.payload_locked_documents_rels rel
+       WHERE rel.parent_id IS NOT NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM public.payload_locked_documents parent
+           WHERE parent.id = rel.parent_id
+         )`,
+    )
+    if (result.rowCount && result.rowCount > 0) {
+      console.log('[tatra] cleaned orphan locked-document rels', result.rowCount)
+    }
+  } catch (error) {
+    console.error('[tatra] orphan locked-document cleanup skipped', error)
+  }
+}
+
 async function repairExistingSchema(client: pg.Client) {
   await ensureSerialDefaults(client)
   await ensureAllPrimaryKeys(client)
+  await cleanupOrphanLockedRels(client)
   await applyDumpConstraints(client)
   await ensureAllPrimaryKeys(client)
   await markMigration(client)
