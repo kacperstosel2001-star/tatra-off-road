@@ -171,7 +171,11 @@ export class CashBillClient {
     }
 
     if (!res.ok || !data.id || !data.redirectUrl) {
-      throw new Error(data.errorMessage || `CashBill: błąd tworzenia płatności (${res.status})`)
+      const hint =
+        data.errorMessage === 'URL not valid'
+          ? ' (sprawdź APP_URL / NEXT_PUBLIC_APP_URL — musi być publiczne HTTPS, nie localhost)'
+          : ''
+      throw new Error((data.errorMessage || `CashBill: błąd tworzenia płatności (${res.status})`) + hint)
     }
 
     return { id: data.id, redirectUrl: data.redirectUrl }

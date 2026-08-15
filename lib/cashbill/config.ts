@@ -9,7 +9,60 @@ export type CashBillRuntimeConfig = {
   appUrl: string
 }
 
-export async function getCashBillRuntimeConfig(): Promise<CashBillRuntimeConfig> {
+function isLocalAppUrl(url: string) {
+  return !url || /localhost|127\.0\.0\.1/i.test(url)
+}
+
+/** Prefer env, otherwise rebuild from the incoming Hostinger/proxy request. */
+export function resolvePublicAppUrl(request?: Request, configured?: string): string {
+  const fromEnv = String(
+    configured ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      '',
+  )
+    .trim()
+    .replace(/\/$/, '')
+
+  if (fromEnv && !isLocalAppUrl(fromEnv) && /^https?:\/\//i.test(fromEnv)) {
+    return fromEnv
+  }
+
+  if (request) {
+    const host = (
+      request.headers.get('x-forwarded-host') ||
+      request.headers.get('host') ||
+      ''
+    )
+      .split(',')[0]
+      .trim()
+    const proto = (
+      request.headers.get('x-forwarded-proto') ||
+      (host.includes('localhost') || host.startsWith('127.') ? 'http' : 'https')
+    )
+      .split(',')[0]
+      .trim()
+
+    if (host && !/localhost|127\.0\.0\.1/i.test(host)) {
+      return `${proto}://${host}`.replace(/\/$/, '')
+    }
+  }
+
+  if (fromEnv) return fromEnv
+  return 'http://127.0.0.1:3005'
+}
+
+export function assertCashBillReturnUrl(appUrl: string) {
+  if (isLocalAppUrl(appUrl) || !/^https:\/\//i.test(appUrl)) {
+    throw new Error(
+      `CashBill wymaga publicznego HTTPS (APP_URL). Teraz jest: ${appUrl || '(puste)'}. ` +
+        `Ustaw APP_URL i NEXT_PUBLIC_APP_URL na https://palegoldenrod-tapir-356599.hostingersite.com ` +
+        `(albo docelową domenę) w Hostinger → Environment variables.`,
+    )
+  }
+}
+
+export async function getCashBillRuntimeConfig(request?: Request): Promise<CashBillRuntimeConfig> {
   const payload = await getPayloadClient()
   const settings = await payload.findGlobal({
     slug: 'booking-settings',
@@ -25,17 +78,13 @@ export async function getCashBillRuntimeConfig(): Promise<CashBillRuntimeConfig>
   const secret =
     String(settings.cashbillSecret || process.env.CASHBILL_SECRET || '').trim()
 
-  const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_URL ||
-    'http://127.0.0.1:3005'
-  ).replace(/\/$/, '')
+  const appUrl = resolvePublicAppUrl(request, process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL)
 
   return { shopId, secret, mode, liveEnabled, appUrl }
 }
 
-export async function getCashBillClient() {
-  const cfg = await getCashBillRuntimeConfig()
+export async function getCashBillClient(request?: Request) {
+  const cfg = await getCashBillRuntimeConfig(request)
   if (!cfg.secret) {
     throw new Error('Brak CASHBILL_SECRET — uzupełnij klucz punktu płatności w .env lub panelu.')
   }
@@ -49,8 +98,8 @@ export async function getCashBillClient() {
 }
 
 /** Preferowane kanały UI: BLIK + przelew (pierwszy pasujący z CashBill). */
-export async function resolvePreferredChannels() {
-  const { client, cfg } = await getCashBillClient()
+export async function resolvePreferredChannels(request?: Request) {
+  const { client, cfg } = await getCashBillClient(request)
   let channels: Awaited<ReturnType<typeof client.getChannels>> = []
   try {
     channels = await client.getChannels('pl')

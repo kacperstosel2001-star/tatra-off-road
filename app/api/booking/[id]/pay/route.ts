@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/booking'
-import { getCashBillClient, resolvePreferredChannels } from '@/lib/cashbill/config'
+import {
+  assertCashBillReturnUrl,
+  getCashBillClient,
+  resolvePreferredChannels,
+} from '@/lib/cashbill/config'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -56,8 +60,9 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ message: 'Brak kwoty zaliczki do pobrania.' }, { status: 400 })
     }
 
-    const { client, cfg } = await getCashBillClient()
-    const channels = await resolvePreferredChannels()
+    const { client, cfg } = await getCashBillClient(request)
+    assertCashBillReturnUrl(cfg.appUrl)
+    const channels = await resolvePreferredChannels(request)
     const channel = method === 'blik' ? channels.blik : channels.transfer
 
     const tripName =
@@ -67,6 +72,15 @@ export async function POST(request: Request, { params }: Params) {
 
     const returnUrl = `${cfg.appUrl}/${lang}/kasa/${id}/dziekujemy`
     const negativeReturnUrl = `${cfg.appUrl}/${lang}/kasa/${id}?payment=cancel`
+
+    console.log('[tatra] cashbill createPayment urls', {
+      appUrl: cfg.appUrl,
+      returnUrl,
+      negativeReturnUrl,
+      mode: cfg.mode,
+      shopId: cfg.shopId,
+      channel: channel.id,
+    })
 
     const payment = await client.createPayment({
       title: `Zaliczka #${id} — ${tripName}`,
@@ -93,7 +107,6 @@ export async function POST(request: Request, { params }: Params) {
         cashbillChannel: channel.id,
         paymentStatus: 'unpaid',
         status: 'pending',
-        // Przedłuż hold na czas płatności CashBill
         expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       },
       overrideAccess: true,
