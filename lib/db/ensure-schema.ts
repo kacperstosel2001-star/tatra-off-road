@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import pg from 'pg'
 import { postgresClientConfig } from './connection'
 import { INITIAL_SCHEMA_SQL } from './initial-schema'
@@ -194,17 +192,10 @@ async function repairExistingSchema(client: pg.Client) {
   await markMigration(client)
 }
 
-export function ensureMediaUploadDir() {
-  const dir = path.resolve(process.cwd(), 'media')
-  fs.mkdirSync(dir, { recursive: true })
-  return dir
-}
-
 export async function applyInitialSchema() {
   if (!PgClient) {
     throw new Error('pg.Client is not available in this runtime')
   }
-  ensureMediaUploadDir()
   const client = new PgClient(postgresClientConfig())
   console.log('[tatra] schema sql bytes', INITIAL_SCHEMA_SQL.length)
   await client.connect()
