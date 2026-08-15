@@ -26,7 +26,7 @@ import { TrasyPage } from './globals/pages/TrasyPage'
 import { CennikPage } from './globals/pages/CennikPage'
 import { AboutPage } from './globals/pages/AboutPage'
 import { ContactPage } from './globals/pages/ContactPage'
-import { seedSiteContent } from './lib/content/seed'
+import { seedFirstAdmin, seedSiteContent } from './lib/content/seed'
 import { applyInitialSchema } from './lib/db/ensure-schema'
 import { postgresConnection } from './lib/db/connection'
 
@@ -100,6 +100,7 @@ export default buildConfig({
     if (process.env.NEXT_PHASE === 'phase-production-build') return
     try {
       await applyInitialSchema()
+      await seedFirstAdmin(payload)
       await seedSiteContent(payload)
     } catch (error) {
       console.error('[tatra] Database bootstrap failed', error)

@@ -1,3 +1,4 @@
+import path from 'path'
 import type { CollectionConfig } from 'payload'
 
 export const Media: CollectionConfig = {
@@ -10,6 +11,14 @@ export const Media: CollectionConfig = {
   access: {
     read: () => true,
   },
+  hooks: {
+    afterError: [
+      ({ error }) => {
+        const cause = (error as Error & { cause?: { code?: string; detail?: string; message?: string } }).cause
+        console.error('[tatra] media afterError', error.message, cause?.code, cause?.detail || cause?.message || cause)
+      },
+    ],
+  },
   fields: [
     {
       name: 'alt',
@@ -19,6 +28,7 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
+    staticDir: path.resolve(process.cwd(), 'media'),
     mimeTypes: [
       'image/*',
       'video/mp4',

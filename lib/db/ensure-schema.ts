@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import pg from 'pg'
 import { postgresClientConfig } from './connection'
 import { INITIAL_SCHEMA_SQL } from './initial-schema'
@@ -8,12 +10,13 @@ const PgClient =
 
 const LOCK_ID = 88442201
 const IGNORE_SQL_CODES = new Set([
-  '42P07', // duplicate_table
+  '42P07', // duplicate_table / duplicate_relation
   '42710', // duplicate_object
   '42701', // duplicate_column
-  '42P16', // invalid_table_definition / already exists variants
+  '42P16', // invalid_table_definition (e.g. second primary key)
   '42723', // duplicate_function
   '23505', // unique_violation
+  '42P01', // undefined_table (index on table that will exist later)
 ])
 
 function asBool(value: unknown) {
@@ -35,6 +38,14 @@ function schemaStatements(sql: string): string[] {
     .filter((statement) => /^(CREATE|ALTER|INSERT)\b/i.test(statement))
 }
 
+function withIfNotExistsIndex(sql: string) {
+  return sql.replace(
+    /^CREATE\s+(UNIQUE\s+)?INDEX\s+(?!IF\s+NOT\s+EXISTS)/i,
+    (_match, unique: string | undefined) =>
+      `CREATE ${unique || ''}INDEX IF NOT EXISTS `,
+  )
+}
+
 async function ensureSerialDefaults(client: pg.Client) {
   const { rows } = await client.query<{ relname: string }>(
     `SELECT c.relname
@@ -43,6 +54,7 @@ async function ensureSerialDefaults(client: pg.Client) {
      WHERE n.nspname = 'public' AND c.relkind = 'S' AND c.relname LIKE '%_id_seq'`,
   )
 
+  let attached = 0
   for (const { relname } of rows) {
     const table = relname.replace(/_id_seq$/, '')
     if (!/^[a-z0-9_]+$/.test(table)) continue
@@ -50,36 +62,73 @@ async function ensureSerialDefaults(client: pg.Client) {
       await client.query(
         `ALTER TABLE public.${table} ALTER COLUMN id SET DEFAULT nextval('public.${relname}'::regclass)`,
       )
+      attached += 1
     } catch (error) {
       console.error('[tatra] serial default skip', table, error)
     }
   }
-  console.log('[tatra] serial defaults attached', rows.length)
+  console.log('[tatra] serial defaults attached', attached, '/', rows.length)
 }
 
 async function runIgnore(client: pg.Client, sql: string) {
   try {
     await client.query(sql)
+    return true
   } catch (error) {
     const code = (error as { code?: string }).code
-    if (code && IGNORE_SQL_CODES.has(code)) return
-    console.error('[tatra] constraint skip', sql.slice(0, 120), error)
+    if (code && IGNORE_SQL_CODES.has(code)) return false
+    console.error('[tatra] constraint skip', sql.slice(0, 140), error)
+    return false
   }
 }
 
-async function ensureUsersConstraints(client: pg.Client) {
-  await runIgnore(
-    client,
-    `ALTER TABLE public.users ADD CONSTRAINT users_pkey PRIMARY KEY (id)`,
+async function ensureAllPrimaryKeys(client: pg.Client) {
+  const { rows } = await client.query<{ table_name: string }>(
+    `SELECT c.relname AS table_name
+     FROM pg_class c
+     JOIN pg_namespace n ON n.oid = c.relnamespace
+     JOIN pg_attribute a
+       ON a.attrelid = c.oid AND a.attname = 'id' AND a.attnum > 0 AND NOT a.attisdropped
+     WHERE n.nspname = 'public' AND c.relkind = 'r'
+       AND NOT EXISTS (
+         SELECT 1 FROM pg_constraint x
+         WHERE x.conrelid = c.oid AND x.contype = 'p'
+       )
+     ORDER BY 1`,
   )
-  await runIgnore(
-    client,
-    `CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx ON public.users USING btree (email)`,
+
+  let added = 0
+  for (const { table_name } of rows) {
+    if (!/^[a-z0-9_]+$/.test(table_name)) continue
+    const ok = await runIgnore(
+      client,
+      `ALTER TABLE public.${table_name} ADD CONSTRAINT ${table_name}_pkey PRIMARY KEY (id)`,
+    )
+    if (ok) added += 1
+  }
+
+  const pk = await client.query<{ n: string }>(
+    `SELECT count(*)::text AS n
+     FROM pg_constraint x
+     JOIN pg_class c ON c.oid = x.conrelid
+     JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname = 'public' AND x.contype = 'p'`,
   )
-  const pk = await client.query(
-    `SELECT conname FROM pg_constraint WHERE conrelid = 'public.users'::regclass AND contype = 'p'`,
-  )
-  console.log('[tatra] users primary keys', pk.rows.map((row) => row.conname))
+  console.log('[tatra] primary keys added', added, 'total', pk.rows[0]?.n, 'missingBefore', rows.length)
+}
+
+async function applyDumpConstraints(client: pg.Client) {
+  let applied = 0
+  for (const statement of schemaStatements(INITIAL_SCHEMA_SQL)) {
+    const isConstraint =
+      /^ALTER\s+TABLE\b/i.test(statement) && /ADD\s+CONSTRAINT\b/i.test(statement)
+    const isIndex = /^CREATE\s+(UNIQUE\s+)?INDEX\b/i.test(statement)
+    if (!isConstraint && !isIndex) continue
+    const sql = isIndex ? withIfNotExistsIndex(statement) : statement
+    const ok = await runIgnore(client, sql)
+    if (ok) applied += 1
+  }
+  console.log('[tatra] dump constraints/indexes applied', applied)
 }
 
 async function markMigration(client: pg.Client) {
@@ -96,10 +145,66 @@ async function markMigration(client: pg.Client) {
   }
 }
 
+async function createMissingTables(client: pg.Client) {
+  const lock = await client.query(`SELECT pg_try_advisory_lock($1) AS locked`, [LOCK_ID])
+  if (!asBool(lock.rows[0]?.locked)) {
+    for (let i = 0; i < 20; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      const again = await client.query(
+        `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+      )
+      if (asBool(again.rows[0]?.present)) return
+    }
+    throw new Error('Timed out waiting for Postgres schema to be created')
+  }
+
+  try {
+    const stillMissing = await client.query(
+      `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+    )
+    if (asBool(stillMissing.rows[0]?.present)) return
+
+    for (const statement of schemaStatements(INITIAL_SCHEMA_SQL)) {
+      try {
+        await client.query(withIfNotExistsIndex(statement))
+      } catch (error) {
+        const code = (error as { code?: string }).code
+        if (code && IGNORE_SQL_CODES.has(code)) continue
+        console.error('[tatra] schema statement failed', statement.slice(0, 180), error)
+        throw error
+      }
+    }
+
+    const created = await client.query(
+      `SELECT to_regclass('public.users') IS NOT NULL AS present`,
+    )
+    if (!asBool(created.rows[0]?.present)) {
+      throw new Error('Schema SQL ran but table "users" still does not exist')
+    }
+  } finally {
+    await client.query(`SELECT pg_advisory_unlock($1)`, [LOCK_ID])
+  }
+}
+
+async function repairExistingSchema(client: pg.Client) {
+  await ensureSerialDefaults(client)
+  await ensureAllPrimaryKeys(client)
+  await applyDumpConstraints(client)
+  await ensureAllPrimaryKeys(client)
+  await markMigration(client)
+}
+
+export function ensureMediaUploadDir() {
+  const dir = path.resolve(process.cwd(), 'media')
+  fs.mkdirSync(dir, { recursive: true })
+  return dir
+}
+
 export async function applyInitialSchema() {
   if (!PgClient) {
     throw new Error('pg.Client is not available in this runtime')
   }
+  ensureMediaUploadDir()
   const client = new PgClient(postgresClientConfig())
   console.log('[tatra] schema sql bytes', INITIAL_SCHEMA_SQL.length)
   await client.connect()
@@ -107,59 +212,12 @@ export async function applyInitialSchema() {
     const existing = await client.query(
       `SELECT to_regclass('public.users') IS NOT NULL AS present`,
     )
-    if (asBool(existing.rows[0]?.present)) {
-      await ensureSerialDefaults(client)
-      await ensureUsersConstraints(client)
-      await markMigration(client)
-      return
+    if (!asBool(existing.rows[0]?.present)) {
+      await createMissingTables(client)
     }
-
-    const lock = await client.query(`SELECT pg_try_advisory_lock($1) AS locked`, [LOCK_ID])
-    if (!asBool(lock.rows[0]?.locked)) {
-      for (let i = 0; i < 20; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        const again = await client.query(
-          `SELECT to_regclass('public.users') IS NOT NULL AS present`,
-        )
-        if (asBool(again.rows[0]?.present)) return
-      }
-      throw new Error('Timed out waiting for Postgres schema to be created')
-    }
-
-    try {
-      const stillMissing = await client.query(
-        `SELECT to_regclass('public.users') IS NOT NULL AS present`,
-      )
-      if (asBool(stillMissing.rows[0]?.present)) {
-        await ensureSerialDefaults(client)
-        await ensureUsersConstraints(client)
-        await markMigration(client)
-        return
-      }
-
-      for (const statement of schemaStatements(INITIAL_SCHEMA_SQL)) {
-        try {
-          await client.query(statement)
-        } catch (error) {
-          const code = (error as { code?: string }).code
-          if (code && IGNORE_SQL_CODES.has(code)) continue
-          console.error('[tatra] schema statement failed', statement.slice(0, 180), error)
-          throw error
-        }
-      }
-
-      const created = await client.query(
-        `SELECT to_regclass('public.users') IS NOT NULL AS present`,
-      )
-      if (!asBool(created.rows[0]?.present)) {
-        throw new Error('Schema SQL ran but table "users" still does not exist')
-      }
-      await ensureSerialDefaults(client)
-      await ensureUsersConstraints(client)
-      await markMigration(client)
-    } finally {
-      await client.query(`SELECT pg_advisory_unlock($1)`, [LOCK_ID])
-    }
+    // Always repair: first boot historically created tables without PKs/indexes.
+    // Payload upserts with ON CONFLICT ("id") and will refuse every write without them.
+    await repairExistingSchema(client)
   } finally {
     await client.end()
   }

@@ -555,25 +555,45 @@ export async function seedSiteContent(payload: Payload) {
     }
 
     payload.logger.info('Site content seed completed (PL defaults).')
-
-    const adminEmail = process.env.PAYLOAD_ADMIN_EMAIL
-    const adminPassword = process.env.PAYLOAD_ADMIN_PASSWORD
-    if (adminEmail && adminPassword) {
-      const users = await payload.find({ collection: 'users', limit: 1, overrideAccess: true })
-      if (users.totalDocs === 0) {
-        await payload.create({
-          collection: 'users',
-          data: {
-            email: adminEmail,
-            password: adminPassword,
-            name: 'Admin',
-          } as any,
-          overrideAccess: true,
-        })
-        payload.logger.info(`Created first admin ${adminEmail}`)
-      }
-    }
   } catch (error) {
     payload.logger.error({ err: error }, 'Site content seed failed')
+  }
+}
+
+export async function seedFirstAdmin(payload: Payload) {
+  const adminEmail = (process.env.PAYLOAD_ADMIN_EMAIL || process.env.ADMIN_EMAIL || '').trim()
+  const adminPassword = process.env.PAYLOAD_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || ''
+
+  if (!adminEmail || !adminPassword) {
+    payload.logger.warn(
+      'PAYLOAD_ADMIN_EMAIL / PAYLOAD_ADMIN_PASSWORD not set — admin will not be created from env',
+    )
+    return
+  }
+
+  try {
+    const existing = await payload.find({
+      collection: 'users',
+      where: { email: { equals: adminEmail } },
+      limit: 1,
+      overrideAccess: true,
+    })
+    if (existing.totalDocs > 0) {
+      payload.logger.info(`Admin already exists: ${adminEmail}`)
+      return
+    }
+
+    await payload.create({
+      collection: 'users',
+      data: {
+        email: adminEmail,
+        password: adminPassword,
+        name: 'Admin',
+      } as any,
+      overrideAccess: true,
+    })
+    payload.logger.info(`Created admin from env: ${adminEmail}`)
+  } catch (error) {
+    payload.logger.error({ err: error }, `Failed to create admin ${adminEmail}`)
   }
 }
