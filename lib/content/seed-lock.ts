@@ -36,7 +36,7 @@ export async function isContentSeedLocked(): Promise<boolean> {
       `SELECT 1 FROM public.payload_migrations WHERE name = $1 LIMIT 1`,
       [SEED_LOCK_NAME],
     )
-    return rows.rowCount > 0
+    return (rows.rowCount ?? 0) > 0
   } catch {
     return false
   } finally {
