@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import { isContentSeedLocked, markContentSeedLocked, seedContentMode } from './seed-lock'
 
 const DEFAULT_BG =
   'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=2400&auto=format&fit=crop'
@@ -102,16 +103,11 @@ const SAMPLE_NEWS_POSTS = [
 ] as const
 
 async function ensureNewsPosts(payload: Payload) {
+  // Only fill sample posts when the collection is completely empty — never top-up later.
+  if (!(await collectionEmpty(payload, 'news-posts'))) return
+
   let created = 0
   for (const post of SAMPLE_NEWS_POSTS) {
-    const existing = await payload.find({
-      collection: 'news-posts',
-      where: { slug: { equals: post.slug } },
-      limit: 1,
-      overrideAccess: true,
-    })
-    if (existing.totalDocs > 0) continue
-
     await payload.create({
       collection: 'news-posts',
       locale: 'pl',
@@ -130,6 +126,26 @@ async function ensureNewsPosts(payload: Payload) {
 }
 
 export async function seedSiteContent(payload: Payload) {
+  const mode = seedContentMode()
+  if (mode === 'skip') {
+    payload.logger.info('Content seed skipped (SEED_CONTENT=false)')
+    return
+  }
+
+  if (mode === 'once') {
+    if (await isContentSeedLocked()) {
+      payload.logger.info('Content seed locked — keeping existing CMS content unchanged')
+      return
+    }
+
+    // Site already has CMS data from earlier deploys — lock and do not touch it.
+    if (!(await collectionEmpty(payload, 'features'))) {
+      await markContentSeedLocked()
+      payload.logger.info('Existing CMS content found — seed locked, no changes applied')
+      return
+    }
+  }
+
   try {
     if (await collectionEmpty(payload, 'features')) {
       const features = [
@@ -633,6 +649,8 @@ export async function seedSiteContent(payload: Payload) {
     }
 
     payload.logger.info('Site content seed completed (PL defaults).')
+    await markContentSeedLocked()
+    payload.logger.info('Content seed locked for future deploys')
   } catch (error) {
     payload.logger.error({ err: error }, 'Site content seed failed')
   }

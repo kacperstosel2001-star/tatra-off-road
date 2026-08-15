@@ -203,53 +203,11 @@ async function cleanupOrphanLockedRels(client: pg.Client) {
   }
 }
 
-async function cleanupBrokenMedia(client: pg.Client) {
-  try {
-    const broken = await client.query<{ id: number; filename: string | null }>(
-      `SELECT id, filename
-       FROM public.media
-       WHERE filename IS NULL
-          OR btrim(filename) = ''
-          OR filename <> btrim(filename)`,
-    )
-    if (!broken.rows.length) return
-
-    const refs = await client.query<{ table_name: string; column_name: string }>(
-      `SELECT tc.table_name, kcu.column_name
-       FROM information_schema.table_constraints AS tc
-       JOIN information_schema.key_column_usage AS kcu
-         ON tc.constraint_name = kcu.constraint_name
-        AND tc.table_schema = kcu.table_schema
-       JOIN information_schema.constraint_column_usage AS ccu
-         ON ccu.constraint_name = tc.constraint_name
-        AND ccu.table_schema = tc.table_schema
-       WHERE tc.constraint_type = 'FOREIGN KEY'
-         AND tc.table_schema = 'public'
-         AND ccu.table_name = 'media'
-         AND ccu.column_name = 'id'`,
-    )
-
-    for (const row of broken.rows) {
-      for (const ref of refs.rows) {
-        if (!/^[a-z0-9_]+$/.test(ref.table_name) || !/^[a-z0-9_]+$/.test(ref.column_name)) continue
-        await runIgnore(
-          client,
-          `UPDATE public.${ref.table_name} SET ${ref.column_name} = NULL WHERE ${ref.column_name} = ${Number(row.id)}`,
-        )
-      }
-      await runIgnore(client, `DELETE FROM public.media WHERE id = ${Number(row.id)}`)
-      console.log('[tatra] removed broken media', row.id, JSON.stringify(row.filename))
-    }
-  } catch (error) {
-    console.error('[tatra] broken media cleanup skipped', error)
-  }
-}
-
 async function repairExistingSchema(client: pg.Client) {
   await ensureSerialDefaults(client)
   await ensureAllPrimaryKeys(client)
   await cleanupOrphanLockedRels(client)
-  await cleanupBrokenMedia(client)
+  // Do not delete media or null out content FKs on boot — CMS content must survive redeploys.
   await applyDumpConstraints(client)
   await ensureAllPrimaryKeys(client)
   await markMigration(client)

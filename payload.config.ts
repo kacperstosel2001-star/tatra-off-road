@@ -99,8 +99,11 @@ export default buildConfig({
   onInit: async (payload) => {
     if (process.env.NEXT_PHASE === 'phase-production-build') return
     try {
+      // Schema repair only (indexes/PKs). Never wipes CMS rows.
       await applyInitialSchema()
+      // Admin from env only if that email is missing.
       await seedFirstAdmin(payload)
+      // Content seed is locked after first successful run — redeploys keep your edits.
       await seedSiteContent(payload)
     } catch (error) {
       console.error('[tatra] Database bootstrap failed', error)
