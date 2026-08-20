@@ -1,6 +1,15 @@
 type MediaLike = { url?: string | null; filename?: string | null } | string | number | null | undefined
 
+/** Stock / placeholder CDNs — never show these on the live site. */
+export function isStockMediaUrl(url: string): boolean {
+  return /unsplash\.com|picsum\.photos|pexels\.com|pixabay\.com|placeholder\.com|placehold\.it|loremflickr|dummyimage/i.test(
+    url,
+  )
+}
+
 function isUnusableMediaUrl(url: string, filename?: string | null) {
+  if (isStockMediaUrl(url)) return true
+
   const nameFromMeta = typeof filename === 'string' ? filename : ''
   if (nameFromMeta && nameFromMeta !== nameFromMeta.trim()) return true
 
@@ -26,12 +35,12 @@ export function resolveMediaUrl(media: MediaLike, fallbackUrl?: string | null): 
     filename = 'filename' in media ? (media.filename as string | null | undefined) : undefined
   }
 
-  // Prefer durable https URLs (Supabase public object URL, Unsplash, etc.)
+  // Prefer durable https URLs (e.g. Supabase public object URL) — never stock CDNs.
   if (url && /^https?:\/\//i.test(url) && !isUnusableMediaUrl(url, filename)) {
     return url
   }
 
-  if (typeof fallbackUrl === 'string' && fallbackUrl.trim()) {
+  if (typeof fallbackUrl === 'string' && fallbackUrl.trim() && !isStockMediaUrl(fallbackUrl)) {
     return fallbackUrl.trim()
   }
 
@@ -40,4 +49,13 @@ export function resolveMediaUrl(media: MediaLike, fallbackUrl?: string | null): 
   }
 
   return ''
+}
+
+/** Resolve media or return a real site photo — never stock. */
+export function resolveRealMediaUrl(
+  media: MediaLike,
+  fallbackUrl: string | null | undefined,
+  siteFallback: string,
+): string {
+  return resolveMediaUrl(media, fallbackUrl) || siteFallback
 }

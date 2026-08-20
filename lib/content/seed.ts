@@ -1,8 +1,7 @@
 import type { Payload } from 'payload'
 import { isContentSeedLocked, markContentSeedLocked, seedContentMode } from './seed-lock'
 
-const DEFAULT_BG =
-  'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=2400&auto=format&fit=crop'
+const DEFAULT_BG = '/site-media/photo-02.jpeg'
 
 async function collectionEmpty(payload: Payload, slug: string) {
   const result = await payload.find({ collection: slug as any, limit: 1, depth: 0 })
@@ -19,7 +18,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>W tym sezonie stawiamy na najwyższą jakość i niezawodność. Modele Can-Am Outlander z rocznika 2025 charakteryzują się ulepszonym zawieszeniem oraz jeszcze wydajniejszym układem chłodzenia.</p><p>Zapraszamy na jazdę próbną — rezerwacja online zajmuje kilka minut, a przewodnik prowadzi całą trasę.</p>',
     publishedAt: '2026-06-15T10:00:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-01.jpeg',
     meta: {
       title: 'Nowe Can-Am Outlander 2025 | Tatra Off-Road',
       description: 'Najnowsze modele Can-Am we flocie Tatra Off-Road.',
@@ -34,7 +33,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p><p>Latem sprawdzą się oddychające warstwy, zimą — ciepła kurtka i rękawice. Na miejscu zawsze masz briefing przed startem.</p>',
     publishedAt: '2026-05-20T14:30:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-02.jpeg',
     meta: {
       title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
       description: 'Poradnik: jak dobrać strój na wycieczkę quadami w górach.',
@@ -49,7 +48,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami, a przewodnik dostosowuje tempo do grupy.</p><p>Ubezpieczenie NNW jest wliczone w pakiet — dzięki temu możesz skupić się na widokach i adrenaliny.</p>',
     publishedAt: '2026-07-02T09:00:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-03.jpeg',
     meta: {
       title: 'Bezpieczeństwo na szlaku | Tatra Off-Road',
       description: 'Jak wygląda bezpieczeństwo na wyprawach quadowych Tatra Off-Road.',
@@ -64,7 +63,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Latem najczęściej rezerwujecie trasy leśne wokół Zębu oraz dłuższe wyprawy z panoramą Tatr. Dopasowujemy dystans do pogody i poziomu grupy.</p><p>Jeśli jedziesz pierwszy raz, polecamy krótszy pakiet intro — potem łatwo wrócić na dłuższy szlak.</p>',
     publishedAt: '2026-07-18T11:00:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-04.jpeg',
     meta: {
       title: 'Najlepsze trasy Podhala 2026 | Tatra Off-Road',
       description: 'Polecane trasy quadowe na Podhalu w sezonie letnim.',
@@ -79,7 +78,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Organizujemy pakiety dla zespołów: briefing, wspólna trasa, przerwa kawowa i zdjęcia z wyprawy. Sprzęt 1- i 2-osobowy, tempo dopasowane do grupy.</p><p>Rezerwację firmową najłatwiej ustalić telefonicznie albo przez formularz online — pomożemy dobrać termin i liczbę quadów.</p>',
     publishedAt: '2026-08-01T08:30:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-05.jpeg',
     meta: {
       title: 'Integracja firmowa na quadach | Tatra Off-Road',
       description: 'Wyprawy quadowe dla firm na Podhalu — Can-Am i przewodnik.',
@@ -94,7 +93,7 @@ const SAMPLE_NEWS_POSTS = [
       '<p>Przy odpowiedniej pokrywie śnieżnej wyruszamy na wybrane odcinki z większym naciskiem na bezpieczeństwo i krótsze dystanse.</p><p>Ciepły strój to must-have — resztę ochrony zapewniamy na miejscu. Terminy zimowe znikają szybko, więc warto rezerwować z wyprzedzeniem.</p>',
     publishedAt: '2026-01-12T12:00:00.000Z',
     imageUrl:
-      'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      '/site-media/photo-06.jpeg',
     meta: {
       title: 'Quady zimą na Podhalu | Tatra Off-Road',
       description: 'Zimowe wyprawy quadowe Tatra Off-Road — przygotowanie i trasy.',
@@ -196,7 +195,7 @@ export async function seedSiteContent(payload: Payload) {
           seats: '1',
           year: '2025',
           imageUrl:
-            'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+            '/site-media/photo-07.jpeg',
           sortOrder: 1,
           active: true,
         } as any,
@@ -213,7 +212,7 @@ export async function seedSiteContent(payload: Payload) {
           seats: '2',
           year: '2025',
           imageUrl:
-            'https://images.unsplash.com/photo-1653859465778-58b3e964cadc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+            '/site-media/photo-01.jpeg',
           sortOrder: 2,
           active: true,
         } as any,
@@ -230,7 +229,7 @@ export async function seedSiteContent(payload: Payload) {
           distance: '8 km',
           duration: '1 godz.',
           imageUrl:
-            'https://images.unsplash.com/photo-1515007507252-fc11563a273e?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+            '/site-media/photo-02.jpeg',
           sortOrder: 1,
         },
         {
@@ -241,7 +240,7 @@ export async function seedSiteContent(payload: Payload) {
           distance: '14 km',
           duration: '2 godz.',
           imageUrl:
-            'https://images.unsplash.com/photo-1654274860285-a3aeec2e594b?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+            '/site-media/photo-03.jpeg',
           sortOrder: 2,
         },
         {
@@ -252,7 +251,7 @@ export async function seedSiteContent(payload: Payload) {
           distance: '18 km',
           duration: '2,5 godz.',
           imageUrl:
-            'https://images.unsplash.com/photo-1489731300081-a03b0ce82303?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+            '/site-media/photo-04.jpeg',
           sortOrder: 3,
         },
       ]
@@ -385,56 +384,56 @@ export async function seedSiteContent(payload: Payload) {
           caption: 'Trasa górska · Podhale',
           layout: '2x2',
           imageUrl:
-            'https://images.unsplash.com/photo-1654274860285-a3aeec2e594b?fm=jpg&q=80&w=1600&auto=format&fit=crop',
+            '/site-media/photo-05.jpeg',
           sortOrder: 1,
         },
         {
           caption: 'Leśny odcinek',
           layout: '1x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1701602078164-89eaa64496db?fm=jpg&q=80&w=800&auto=format&fit=crop',
+            '/site-media/photo-06.jpeg',
           sortOrder: 2,
         },
         {
           caption: 'Start wyprawy',
           layout: '1x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1515007507252-fc11563a273e?fm=jpg&q=80&w=800&auto=format&fit=crop',
+            '/site-media/photo-07.jpeg',
           sortOrder: 3,
         },
         {
           caption: 'Tatry z góry',
           layout: '1x2',
           imageUrl:
-            'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=800&auto=format&fit=crop',
+            '/site-media/photo-01.jpeg',
           sortOrder: 4,
         },
         {
           caption: 'Akcja',
           layout: '1x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1489731300081-a03b0ce82303?fm=jpg&q=80&w=800&auto=format&fit=crop',
+            '/site-media/photo-02.jpeg',
           sortOrder: 5,
         },
         {
           caption: 'Duo Ride',
           layout: '2x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1496521061024-90e1c1221555?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+            '/site-media/photo-03.jpeg',
           sortOrder: 6,
         },
         {
           caption: 'Can-Am 2025',
           layout: '1x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=800&auto=format&fit=crop',
+            '/site-media/photo-04.jpeg',
           sortOrder: 7,
         },
         {
           caption: 'Grupa na trasie',
           layout: '3x1',
           imageUrl:
-            'https://images.unsplash.com/photo-1575677155757-b5eb75df3a4e?fm=jpg&q=80&w=1600&auto=format&fit=crop',
+            '/site-media/photo-05.jpeg',
           sortOrder: 8,
         },
       ]
@@ -457,7 +456,7 @@ export async function seedSiteContent(payload: Payload) {
               'Wyprawy quadowe Can-Am w okolicach Zębu i Nowego Targu. Rezerwacja online, żywy kalendarz, zaliczka BLIK.',
           },
         hero: {
-          mediaType: 'image',
+          mediaType: 'video',
           headline: 'Najlepsza',
           highlightWord: 'przygoda',
           subheadline: 'w terenie',
@@ -476,6 +475,7 @@ export async function seedSiteContent(payload: Payload) {
             { value: '100%', label: 'Legalnych szlaków' },
           ],
           bgImageUrl: DEFAULT_BG,
+          videoUrl: '/site-media/ride-06.mp4',
           bookingPanel: {
             eyebrow: 'Szybka Rezerwacja',
             title: 'Start w 4 krokach',

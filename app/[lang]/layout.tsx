@@ -88,8 +88,7 @@ export default async function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'Tatra Off-Road',
-    image:
-      'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=2400&auto=format&fit=crop',
+    image: 'https://tatraoffroad.pl/site-media/photo-02.jpeg',
     '@id': 'https://tatraoffroad.pl',
     url: 'https://tatraoffroad.pl',
     telephone: phone.replace(/\s/g, ''),

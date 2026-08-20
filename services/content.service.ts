@@ -1,5 +1,12 @@
 import { getPayloadClient } from '@/lib/booking'
-import { resolveMediaUrl } from '@/lib/content/media'
+import { resolveMediaUrl, resolveRealMediaUrl } from '@/lib/content/media'
+import {
+  getSiteGallery,
+  SITE_CTA_IMAGE,
+  SITE_HERO_POSTER,
+  SITE_HERO_VIDEO,
+  SITE_PHOTO,
+} from '@/lib/content/site-media'
 import { fixOrphansDeep } from '@/lib/typography'
 import type { ContentRepository } from '@/repositories/content.repository'
 import type {
@@ -21,9 +28,6 @@ import type {
   Locale,
 } from '@/types/payload'
 
-const DEFAULT_BG =
-  'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=2400&auto=format&fit=crop'
-
 function loc(locale?: Locale): Locale {
   return locale === 'en' ? 'en' : 'pl'
 }
@@ -42,8 +46,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>W tym sezonie stawiamy na najwyższą jakość i niezawodność. Modele Can-Am Outlander z rocznika 2025 charakteryzują się ulepszonym zawieszeniem oraz jeszcze wydajniejszym układem chłodzenia.</p>',
     publishedAt: '2026-06-15T10:00:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['01'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Nowe Can-Am Outlander 2025 | Tatra Off-Road',
@@ -59,8 +62,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle.</p>',
     publishedAt: '2026-05-20T14:30:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['02'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road',
@@ -75,8 +77,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami.</p>',
     publishedAt: '2026-07-02T09:00:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['03'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Bezpieczeństwo na szlaku | Tatra Off-Road',
@@ -91,8 +92,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>Latem najczęściej rezerwujecie trasy leśne wokół Zębu oraz dłuższe wyprawy z panoramą Tatr.</p>',
     publishedAt: '2026-07-18T11:00:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['04'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Najlepsze trasy Podhala 2026 | Tatra Off-Road',
@@ -107,8 +107,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>Organizujemy pakiety dla zespołów: briefing, wspólna trasa i zdjęcia z wyprawy.</p>',
     publishedAt: '2026-08-01T08:30:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['05'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Integracja firmowa na quadach | Tatra Off-Road',
@@ -123,8 +122,7 @@ const FALLBACK_NEWS: NewsDTO[] = [
     content:
       '<p>Przy odpowiedniej pokrywie śnieżnej wyruszamy na wybrane odcinki z większym naciskiem na bezpieczeństwo.</p>',
     publishedAt: '2026-01-12T12:00:00.000Z',
-    image:
-      'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+    image: SITE_PHOTO['06'],
     author: 'Tatra Off-Road Team',
     meta: {
       title: 'Quady zimą na Podhalu | Tatra Off-Road',
@@ -144,8 +142,9 @@ const mockHero: HeroDTO = {
     { value: '1200+', label: 'Wypraw' },
     { value: '100%', label: 'Legalnych szlaków' },
   ],
-  mediaType: 'image',
-  bgImage: DEFAULT_BG,
+  mediaType: 'video',
+  bgImage: SITE_HERO_POSTER,
+  videoUrl: SITE_HERO_VIDEO,
   primaryCtaLabel: 'Zarezerwuj online',
   secondaryCtaLabel: 'Zobacz ceny',
   bookingPanel: {
@@ -168,7 +167,7 @@ const mockCta: CtaBannerDTO = {
   titleHighlight: 'tuż za rogiem',
   description:
     'Ostatnie wolne terminy w tym miesiącu. Zadzwoń lub zarezerwuj online — potwierdzenie w 30 minut.',
-  bgImage: DEFAULT_BG,
+  bgImage: SITE_CTA_IMAGE,
 }
 
 export class PayloadContentService implements ContentRepository {
@@ -211,6 +210,7 @@ export class PayloadContentService implements ContentRepository {
       if (!hero?.headline) return mockHero
       const panel = hero.bookingPanel || {}
       const videoFromUpload = resolveMediaUrl(hero.video)
+      const videoUrl = videoFromUpload || hero.videoUrl || SITE_HERO_VIDEO
       return {
         headline: hero.headline || mockHero.headline,
         highlightWord: hero.highlightWord || mockHero.highlightWord,
@@ -218,9 +218,9 @@ export class PayloadContentService implements ContentRepository {
         lead: hero.lead || mockHero.lead,
         badges: (hero.badges || []).map((b: any) => b.label).filter(Boolean),
         stats: (hero.stats || []).map((s: any) => ({ value: s.value, label: s.label })),
-        mediaType: hero.mediaType === 'video' ? 'video' : 'image',
-        bgImage: resolveMediaUrl(hero.bgImage, hero.bgImageUrl) || mockHero.bgImage,
-        videoUrl: videoFromUpload || hero.videoUrl || undefined,
+        mediaType: videoUrl ? 'video' : hero.mediaType === 'video' ? 'video' : 'image',
+        bgImage: resolveRealMediaUrl(hero.bgImage, hero.bgImageUrl, SITE_HERO_POSTER),
+        videoUrl,
         primaryCtaLabel: hero.primaryCtaLabel || mockHero.primaryCtaLabel,
         secondaryCtaLabel: hero.secondaryCtaLabel || mockHero.secondaryCtaLabel,
         bookingPanel: {
@@ -258,7 +258,7 @@ export class PayloadContentService implements ContentRepository {
         titleLine1: cta.titleLine1 || mockCta.titleLine1,
         titleHighlight: cta.titleHighlight || mockCta.titleHighlight,
         description: cta.description || mockCta.description,
-        bgImage: resolveMediaUrl(cta.bgImage, cta.bgImageUrl) || mockCta.bgImage,
+        bgImage: resolveRealMediaUrl(cta.bgImage, cta.bgImageUrl, SITE_CTA_IMAGE),
       }
     } catch {
       return mockCta
@@ -357,17 +357,21 @@ export class PayloadContentService implements ContentRepository {
         depth: 1,
       })
       if (result.docs.length) {
-        return result.docs.map((d: any) => ({
-          id: String(d.id),
-          name: d.name,
-          type: d.type || '',
-          power: d.power || '',
-          drive: d.drive || '',
-          seats: d.seats || '',
-          year: d.year || '',
-          badge: d.badge || '',
-          image: resolveMediaUrl(d.image, d.imageUrl),
-        }))
+        return result.docs.map((d: any, idx: number) => {
+          const keys = Object.keys(SITE_PHOTO) as Array<keyof typeof SITE_PHOTO>
+          const fallback = SITE_PHOTO[keys[idx % keys.length]]
+          return {
+            id: String(d.id),
+            name: d.name,
+            type: d.type || '',
+            power: d.power || '',
+            drive: d.drive || '',
+            seats: d.seats || '',
+            year: d.year || '',
+            badge: d.badge || '',
+            image: resolveRealMediaUrl(d.image, d.imageUrl, fallback),
+          }
+        })
       }
     } catch {
       /* fallback */
@@ -382,8 +386,7 @@ export class PayloadContentService implements ContentRepository {
         seats: '1',
         year: '2025',
         badge: '1-osobowy',
-        image:
-          'https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+        image: SITE_PHOTO['01'],
       },
       {
         id: '2',
@@ -394,8 +397,7 @@ export class PayloadContentService implements ContentRepository {
         seats: '2',
         year: '2025',
         badge: '2-osobowy',
-        image:
-          'https://images.unsplash.com/photo-1653859465778-58b3e964cadc?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+        image: SITE_PHOTO['02'],
       },
     ]
   }
@@ -413,16 +415,20 @@ export class PayloadContentService implements ContentRepository {
         depth: 1,
       })
       if (result.docs.length) {
-        return result.docs.map((d: any) => ({
-          id: String(d.id),
-          title: d.title,
-          difficulty: d.difficulty || '',
-          routeNum: d.routeNum || '',
-          description: d.description || '',
-          distance: d.distance || '',
-          duration: d.duration || '',
-          image: resolveMediaUrl(d.image, d.imageUrl),
-        }))
+        return result.docs.map((d: any, idx: number) => {
+          const keys = Object.keys(SITE_PHOTO) as Array<keyof typeof SITE_PHOTO>
+          const fallback = SITE_PHOTO[keys[(idx + 2) % keys.length]]
+          return {
+            id: String(d.id),
+            title: d.title,
+            difficulty: d.difficulty || '',
+            routeNum: d.routeNum || '',
+            description: d.description || '',
+            distance: d.distance || '',
+            duration: d.duration || '',
+            image: resolveRealMediaUrl(d.image, d.imageUrl, fallback),
+          }
+        })
       }
     } catch {
       /* fallback */
@@ -436,8 +442,7 @@ export class PayloadContentService implements ContentRepository {
         description: 'Leśne ścieżki i błotniste odcinki tuż za Zębem. Idealna na pierwszą jazdę quadem.',
         distance: '8 km',
         duration: '1 godz.',
-        image:
-          'https://images.unsplash.com/photo-1515007507252-fc11563a273e?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+        image: SITE_PHOTO['03'],
       },
       {
         id: '2',
@@ -447,8 +452,7 @@ export class PayloadContentService implements ContentRepository {
         description: 'Wyraźne podjazdy i widoki na Tatry — dla tych, którzy chcą poczuć teren pod kołami.',
         distance: '14 km',
         duration: '2 godz.',
-        image:
-          'https://images.unsplash.com/photo-1654274860285-a3aeec2e594b?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+        image: SITE_PHOTO['04'],
       },
       {
         id: '3',
@@ -458,8 +462,7 @@ export class PayloadContentService implements ContentRepository {
         description: 'Najlepsza o zachodzie słońca — grzbiety, polany i widok na całe Podhale.',
         distance: '18 km',
         duration: '2,5 godz.',
-        image:
-          'https://images.unsplash.com/photo-1489731300081-a03b0ce82303?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+        image: SITE_PHOTO['05'],
       },
     ]
   }
@@ -599,29 +602,8 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getGallery(locale?: Locale): Promise<GalleryItemDTO[]> {
-    try {
-      const payload = await getPayloadClient()
-      const result = await payload.find({
-        collection: 'gallery-items',
-        locale: loc(locale),
-        fallbackLocale: 'pl',
-        where: { active: { equals: true } },
-        sort: 'sortOrder',
-        limit: 50,
-        depth: 1,
-      })
-      if (result.docs.length) {
-        return result.docs.map((d: any) => ({
-          id: String(d.id),
-          caption: d.caption,
-          image: resolveMediaUrl(d.image, d.imageUrl),
-          layout: d.layout || '1x1',
-        }))
-      }
-    } catch {
-      /* fallback */
-    }
-    return []
+    // Always show site photos from `zdjecia i filmiki` so every file is on the page.
+    return getSiteGallery(locale)
   }
 
   async getNews(locale?: Locale): Promise<NewsDTO[]> {
@@ -671,9 +653,7 @@ export class PayloadContentService implements ContentRepository {
       excerpt: d.excerpt || '',
       content: d.content || '',
       publishedAt: d.publishedAt,
-      image:
-        resolveMediaUrl(d.image, d.imageUrl) ||
-        'https://images.unsplash.com/photo-1698154050417-8a472a92ac78?fm=jpg&q=80&w=1400&auto=format&fit=crop',
+      image: resolveRealMediaUrl(d.image, d.imageUrl, SITE_PHOTO['07']),
       author: d.author || 'Tatra Off-Road Team',
       meta: {
         title: d.meta?.title || d.title,

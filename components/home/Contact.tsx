@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 export function Contact({ dict, contactInfo }: { dict: any; contactInfo: ContactInfoDTO }) {
   return (
     <section className="bg-snow section-pad" id="kontakt">
-      <span className="section-tag">09 / {dict.nav.contact.toUpperCase()}</span>
+      <span className="section-tag">10 / {dict.nav.contact.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.contact.eyebrow}</span>

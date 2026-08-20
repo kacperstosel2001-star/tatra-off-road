@@ -73,6 +73,13 @@
     "headline": "See how<br/>it looks",
     "subheadline": "Real shots from the trails - no beautification, no Photoshop. This is what our trips look like."
   },
+  "rides": {
+    "eyebrow": "Descents",
+    "headline": "Clips<br/>from the trail",
+    "subheadline": "Short downhill clips — exactly what it feels like behind the Can-Am wheel.",
+    "play": "Play",
+    "pause": "Pause"
+  },
   "faq": {
     "eyebrow": "FAQ",
     "headline": "Before<br/>you book",

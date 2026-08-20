@@ -47,7 +47,7 @@ if (!serviceTs.includes('getNews(')) {
         excerpt: "Do naszej floty dołączyły właśnie najnowsze modele Can-Am Outlander 2025. Sprawdź, co się zmieniło i dlaczego warto je przetestować.",
         content: "<p>W tym sezonie stawiamy na najwyższą jakość i niezawodność. Modele Can-Am Outlander z rocznika 2025 charakteryzują się ulepszonym zawieszeniem oraz jeszcze wydajniejszym układem chłodzenia, co przekłada się na maksymalny komfort jazdy po trudnych tatrzańskich szlakach.</p><p>Zapraszamy do rezerwacji – poczuj różnicę na własnej skórze!</p>",
         publishedAt: "2026-06-15T10:00:00Z",
-        image: "https://images.unsplash.com/photo-1678554834127-71311e4a8024?fm=jpg&q=80&w=1400&auto=format&fit=crop",
+        image: "/site-media/photo-01.jpeg",
         author: "Tatra Off-Road Team",
         meta: { title: "Nowe Can-Am Outlander 2025 | Tatra Off-Road", description: "Najnowsze modele Can-Am we flocie Tatra Off-Road. Sprawdź, dlaczego to najlepszy sprzęt na trasy." }
       },
@@ -58,7 +58,7 @@ if (!serviceTs.includes('getNews(')) {
         excerpt: "Przygotowanie do wyprawy to klucz do udanej zabawy. Zebraliśmy najważniejsze wskazówki dotyczące stroju w zależności od pory roku.",
         content: "<p>Niezależnie od pogody, zawsze zalecamy wygodne buty z twardą podeszwą oraz długie spodnie. Dostarczamy kaski, kominiarki i gogle, ale warto pamiętać o własnych rękawicach.</p><p>W sezonie jesienno-zimowym absolutną koniecznością jest bielizna termoaktywna i warstwa wiatroszczelna. Na szlakach bywa wietrznie, a prędkość na quadzie potęguje uczucie chłodu.</p>",
         publishedAt: "2026-05-20T14:30:00Z",
-        image: "https://images.unsplash.com/photo-1596395356956-61b6cb4ec678?fm=jpg&q=80&w=1400&auto=format&fit=crop",
+        image: "/site-media/photo-02.jpeg",
         author: "Tatra Off-Road Team",
         meta: { title: "Jak ubrać się na wyprawę quadami? | Blog Tatra Off-Road", description: "Poradnik: Jak odpowiednio dobrać strój na wycieczkę quadami w górach. Pory roku, sprzęt i bezpieczeństwo." }
       }

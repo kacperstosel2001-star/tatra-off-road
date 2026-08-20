@@ -7,7 +7,7 @@ import { ReviewDTO } from '@/types/payload';
 export function Testimonials({ dict, reviews }: { dict: any; reviews: ReviewDTO[] }) {
   return (
     <section className="bg-forest text-snow overflow-hidden section-pad">
-      <span className="section-tag" style={{ color: '#c1c4a9' }}>07 / OPINIE</span>
+      <span className="section-tag" style={{ color: '#c1c4a9' }}>08 / OPINIE</span>
       <div className="wrap">
         <div className="shead center">
           <span className="eyebrow">Opinie klientów</span>

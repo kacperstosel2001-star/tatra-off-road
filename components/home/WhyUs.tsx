@@ -29,7 +29,7 @@ export function WhyUs({ dict, features }: { dict: any; features: FeatureDTO[] })
         <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-9 lg:gap-20 items-start">
           <div className="lg:sticky lg:top-[calc(var(--site-header)+var(--site-tread)+1.5rem)]">
             <div className="aspect-[4/5] overflow-hidden relative group">
-              <Image src="https://images.unsplash.com/photo-1701602078164-89eaa64496db?fm=jpg&q=80&w=1200&auto=format&fit=crop" alt="Quad" fill className="object-cover transition-transform duration-[2000ms] ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.04]" referrerPolicy="no-referrer" />
+              <Image src="/site-media/photo-03.jpeg" alt="Quad na trasie" fill className="object-cover transition-transform duration-[2000ms] ease-[cubic-bezier(.2,.7,.2,1)] group-hover:scale-[1.04]" />
               <div className="absolute top-5 right-5 bg-orange text-ink py-[14px] px-[18px] font-display uppercase text-[14px] tracking-[0.05em]">EST. 2018</div>
               <div className="absolute bottom-5 left-5 bg-snow py-4 px-5 font-label uppercase tracking-[0.1em] text-[12px] font-bold flex items-center gap-[10px]">
                 <Shield className="w-[14px] h-[14px] fill-orange text-orange" />

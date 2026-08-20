@@ -72,6 +72,13 @@
     "headline": "Sehen Sie,<br/>wie es aussieht",
     "subheadline": "Echte Aufnahmen von den Trails - keine Verschönerung, kein Photoshop. So sehen unsere Reisen aus."
   },
+  "rides": {
+    "eyebrow": "Abfahrten",
+    "headline": "Clips<br/>von der Strecke",
+    "subheadline": "Kurze Abfahrtsclips — genau so fühlt es sich hinter dem Can-Am-Lenkrad an.",
+    "play": "Abspielen",
+    "pause": "Pause"
+  },
   "faq": {
     "eyebrow": "FAQ",
     "headline": "Bevor<br/>Sie buchen",

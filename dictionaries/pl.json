@@ -73,6 +73,13 @@
     "headline": "Zobacz jak<br/>to wygląda",
     "subheadline": "Prawdziwe kadry z tras — bez upiększania, bez Photoshopa. Tak wyglądają nasze wyprawy."
   },
+  "rides": {
+    "eyebrow": "Zjazdy",
+    "headline": "Filmiki<br/>z trasy",
+    "subheadline": "Krótkie ujęcia zjazdów — dokładnie to, co czujesz za kierownicą Can-Am.",
+    "play": "Odtwórz",
+    "pause": "Wstrzymaj"
+  },
   "faq": {
     "eyebrow": "FAQ",
     "headline": "Zanim<br/>zarezerwujesz",

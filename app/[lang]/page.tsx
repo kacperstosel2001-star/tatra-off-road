@@ -17,6 +17,7 @@ import { Routes } from '@/components/home/Routes'
 import { Pricing } from '@/components/home/Pricing'
 import { Process } from '@/components/home/Process'
 import { Gallery } from '@/components/home/Gallery'
+import { RideClips } from '@/components/home/RideClips'
 import { FAQ } from '@/components/home/FAQ'
 import { Testimonials } from '@/components/home/Testimonials'
 import { CtaBanner } from '@/components/home/CtaBanner'
@@ -80,6 +81,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <Pricing dict={dict} trips={trips} lang={locale} />
         <Process dict={dict} steps={steps} />
         <Gallery dict={dict} items={gallery} />
+        <RideClips dict={dict} lang={locale} />
         <FAQ dict={dict} items={faq} phone={contactInfo.phones[0]} />
         <Testimonials dict={dict} reviews={reviews} />
         <CtaBanner dict={dict} contactInfo={contactInfo} content={ctaBanner} lang={locale} />
