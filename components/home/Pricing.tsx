@@ -4,6 +4,7 @@ import React from 'react'
 import { Check, ArrowRight, Clock } from 'lucide-react'
 import { LinkButton } from '../ui/link-button'
 import { localePath } from '@/lib/i18n'
+import { telHref, useContact } from '@/components/providers/ContactProvider'
 
 export type TripPlan = {
   id: string | number
@@ -46,6 +47,8 @@ export function Pricing({
     lang === 'en'
       ? 'No trips published yet. Check back soon or call us.'
       : 'Brak opublikowanych wypraw. Zadzwoń lub wróć wkrótce.'
+  const contact = useContact()
+  const phoneNumber = contact.phones[0] || '+48 888 254 223'
 
   return (
     <section className="bg-paper overflow-hidden section-pad" id="cennik">
@@ -155,6 +158,18 @@ export function Pricing({
             })}
           </div>
         )}
+
+        {dict.booking?.noSlotShort ? (
+          <p className="mt-8 mb-0 max-w-2xl text-[14.5px] leading-snug text-[#4a4638]">
+            {dict.booking.noSlotShort}{' '}
+            <a
+              href={telHref(phoneNumber)}
+              className="font-label text-[12px] uppercase tracking-[0.08em] font-bold text-orange hover:text-ink transition-colors"
+            >
+              {dict.booking.callUs || dict.common.call}: {phoneNumber}
+            </a>
+          </p>
+        ) : null}
       </div>
     </section>
   )

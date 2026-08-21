@@ -121,5 +121,13 @@
   },
   "breadcrumbs": {
     "home": "Strona główna"
+  },
+  "booking": {
+    "noSlotTitle": "Chciałeś wcześniejszą godzinę?",
+    "noSlotBody": "Zadzwoń do nas — często jesteśmy na miejscu i uda się coś złapać, nawet jeśli online nie ma wolnego slotu.",
+    "noSlotShort": "Chciałeś wcześniejszą godzinę? Zadzwoń — może się uda mimo kalendarza online.",
+    "callUs": "Zadzwoń do nas",
+    "faqNoSlotQ": "Nie ma wolnego terminu online?",
+    "faqNoSlotA": "Zadzwoń — często jesteśmy na miejscu i znajdziemy wcześniejszy start albo zwolnione miejsce, nawet jeśli online nic nie widać."
   }
 }

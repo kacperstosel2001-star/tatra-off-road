@@ -120,5 +120,13 @@
   },
   "breadcrumbs": {
     "home": "Startseite"
+  },
+  "booking": {
+    "noSlotTitle": "Frühere Uhrzeit gewünscht?",
+    "noSlotBody": "Ruf uns an — wir sind oft vor Ort und finden meist noch einen Platz, auch wenn online nichts frei ist.",
+    "noSlotShort": "Früherer Termin gewünscht? Anrufen — oft geht trotzdem etwas.",
+    "callUs": "Anrufen",
+    "faqNoSlotQ": "Kein freier Termin online?",
+    "faqNoSlotA": "Ruf an — wir sind oft vor Ort und prüfen einen früheren Start oder einen frei gewordenen Slot, auch wenn online nichts zu sehen ist."
   }
 }

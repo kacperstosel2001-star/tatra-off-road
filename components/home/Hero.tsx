@@ -162,6 +162,11 @@ export function Hero({ dict, content, lang = 'pl' }: { dict: any; content: HeroD
             {panel.buttonLabel || dict.common.checkAvailability} <ArrowRight className="w-4 h-4" />
           </LinkButton>
           <div className="text-[11.5px] text-stone mt-[12px] text-center">{panel.finePrint}</div>
+          {dict.booking?.noSlotShort ? (
+            <p className="text-[12px] text-[#E7E1D0] mt-3 mb-0 text-center leading-snug opacity-90">
+              {dict.booking.noSlotShort}
+            </p>
+          ) : null}
         </div>
       </div>
 

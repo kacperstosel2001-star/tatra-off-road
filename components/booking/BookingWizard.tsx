@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
+import { telHref, useContact } from '@/components/providers/ContactProvider'
 
 type Trip = {
   id: string | number
@@ -42,6 +43,10 @@ const STEPS: { id: StepId; label: string }[] = [
 ]
 
 const BOOKING_FAQ = [
+  {
+    q: 'Nie ma wolnego terminu online?',
+    a: 'Zadzwoń — często jesteśmy na miejscu i znajdziemy wcześniejszy start albo zwolnione miejsce, nawet jeśli online nic nie widać.',
+  },
   {
     q: 'Co obejmuje cena?',
     a: 'Quad, paliwo, kask, briefing i opiekę przewodnika na trasie.',
@@ -81,7 +86,23 @@ function minDateISO() {
   return d.toISOString().slice(0, 10)
 }
 
-export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
+export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any }) {
+  const contact = useContact()
+  const phoneNumber = contact.phones[0] || '+48 888 254 223'
+  const copy = dict?.booking || {
+    noSlotTitle: 'Chciałeś wcześniejszą godzinę?',
+    noSlotBody:
+      'Zadzwoń do nas — często jesteśmy na miejscu i uda się coś złapać, nawet jeśli online nie ma wolnego slotu.',
+    callUs: 'Zadzwoń do nas',
+    faqNoSlotQ: 'Nie ma wolnego terminu online?',
+    faqNoSlotA:
+      'Zadzwoń — często jesteśmy na miejscu i znajdziemy wcześniejszy start albo zwolnione miejsce, nawet jeśli online nic nie widać.',
+  }
+  const faqItems = [
+    { q: copy.faqNoSlotQ, a: copy.faqNoSlotA },
+    ...BOOKING_FAQ.slice(1),
+  ]
+
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -469,8 +490,16 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
                   <Loader2 className="animate-spin" size={16} /> Sprawdzamy dostępność…
                 </div>
               ) : times.length === 0 ? (
-                <div className="booking-empty">
-                  Brak wolnych godzin tego dnia. Wybierz inną datę albo zmniejsz liczbę quadow.
+                <div className="booking-empty grid gap-3">
+                  <span>
+                    Brak wolnych godzin tego dnia. Wybierz inną datę albo zmniejsz liczbę quadow.
+                  </span>
+                  <a
+                    href={telHref(phoneNumber)}
+                    className="font-label text-[12px] uppercase tracking-[0.1em] font-bold text-orange hover:text-ink transition-colors"
+                  >
+                    {copy.callUs}: {phoneNumber}
+                  </a>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -490,6 +519,19 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
                 </div>
               )}
             </div>
+
+            <aside className="border border-stone-line bg-paper p-4 sm:p-5">
+              <p className="font-label text-[12px] uppercase tracking-[0.1em] font-bold m-0 mb-2 text-ink">
+                {copy.noSlotTitle}
+              </p>
+              <p className="m-0 text-[14px] leading-snug text-[#4a4638]">{copy.noSlotBody}</p>
+              <a
+                href={telHref(phoneNumber)}
+                className="inline-flex items-center gap-2 mt-3 font-label text-[12px] uppercase tracking-[0.1em] font-bold text-orange hover:text-ink transition-colors"
+              >
+                {copy.callUs}: {phoneNumber}
+              </a>
+            </aside>
           </section>
         )}
 
@@ -596,7 +638,7 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
             </h3>
           </div>
           <div className="grid gap-2">
-            {BOOKING_FAQ.map((item, i) => (
+            {faqItems.map((item, i) => (
               <button
                 key={item.q}
                 type="button"
@@ -685,9 +727,9 @@ export function BookingWizard({ lang = 'pl' }: { lang?: string }) {
             </h3>
           </div>
           <div className="grid gap-2">
-            {BOOKING_FAQ.map((item, i) => (
+            {faqItems.map((item, i) => (
               <button
-                key={item.q}
+                key={`aside-${item.q}`}
                 type="button"
                 className="text-left border border-stone-line bg-snow px-3 py-3"
                 onClick={() => setOpenFaq(openFaq === i ? -1 : i)}

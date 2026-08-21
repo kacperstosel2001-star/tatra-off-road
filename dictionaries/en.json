@@ -121,5 +121,13 @@
   },
   "breadcrumbs": {
     "home": "Home"
+  },
+  "booking": {
+    "noSlotTitle": "Wanted an earlier time?",
+    "noSlotBody": "Call us — we’re often on site and can usually fit you in, even if nothing shows online.",
+    "noSlotShort": "Wanted an earlier slot? Call us — we may still have a spot.",
+    "callUs": "Call us",
+    "faqNoSlotQ": "Nothing free online?",
+    "faqNoSlotA": "Call us — we’re often on site and can check an earlier start or a newly freed spot, even if the calendar looks full."
   }
 }
