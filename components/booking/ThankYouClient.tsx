@@ -193,7 +193,9 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             </p>
             <h1 className="font-display text-[40px] uppercase m-0 mb-3">Rezerwacja potwierdzona</h1>
             <p className="text-[#4a4638] m-0 text-[16px]">
-              Zaliczka została opłacona. Na miejscu zapłacisz resztę przed startem wyprawy.
+              Zaliczka została opłacona
+              {booking.customerEmail ? ` — potwierdzenie wysłaliśmy na ${booking.customerEmail}` : ''}.
+              Na miejscu zapłacisz resztę przed startem wyprawy.
             </p>
           </div>
         </div>
@@ -266,7 +268,8 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         <h2 className="font-display text-[28px] uppercase m-0 mb-4">Co dalej?</h2>
         <ol className="m-0 pl-5 grid gap-4 text-[15px] opacity-90">
           <li>Zapisz numer rezerwacji #{booking.id}.</li>
-          <li>Przyjedź 10–15 min przed startem.</li>
+          <li>Bądź 15 minut wcześniej na miejscu.</li>
+          <li>Kierowca musi mieć prawo jazdy kat. B.</li>
           <li>Na miejscu dopłacisz {booking.remainingAmount ?? 0} zł i dostaniesz briefing.</li>
           <li>Zmiana / anulacja: zadzwoń min. 24h wcześniej.</li>
         </ol>

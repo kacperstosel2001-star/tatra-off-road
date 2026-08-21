@@ -203,6 +203,13 @@ async function cleanupOrphanLockedRels(client: pg.Client) {
   }
 }
 
+async function ensureBookingEmailColumn(client: pg.Client) {
+  await runIgnore(
+    client,
+    `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS confirmation_email_sent_at timestamp with time zone`,
+  )
+}
+
 async function repairExistingSchema(client: pg.Client) {
   await ensureSerialDefaults(client)
   await ensureAllPrimaryKeys(client)
@@ -210,6 +217,7 @@ async function repairExistingSchema(client: pg.Client) {
   // Do not delete media or null out content FKs on boot — CMS content must survive redeploys.
   await applyDumpConstraints(client)
   await ensureAllPrimaryKeys(client)
+  await ensureBookingEmailColumn(client)
   await markMigration(client)
 }
 

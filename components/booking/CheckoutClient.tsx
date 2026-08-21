@@ -306,14 +306,17 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             </div>
             <label className="flex flex-col gap-1.5">
               <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">
-                E-mail <span className="text-stone font-normal">(opcjonalnie)</span>
+                E-mail
               </span>
               <input
                 type="email"
                 className="booking-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
               />
+              <span className="text-[12px] text-stone">Na ten adres wyślemy potwierdzenie rezerwacji.</span>
             </label>
 
             <fieldset className="m-0 p-0 border-0">

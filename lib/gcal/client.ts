@@ -180,6 +180,10 @@ function buildEventBody(booking: Booking) {
     `Uwagi: ${notes}`,
     `ID rezerwacji: ${booking.id}`,
     `Status płatności: ${booking.paymentStatus || booking.status}`,
+    '',
+    'Ważne:',
+    '- Klient ma być 15 minut wcześniej',
+    '- Kierowca: prawo jazdy kat. B',
   ].join('\n')
 
   return {

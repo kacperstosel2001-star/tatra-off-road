@@ -3,6 +3,7 @@ import { getPayloadClient } from '@/lib/booking'
 import { getCashBillClient } from '@/lib/cashbill/config'
 import { extractPaymentStatus, isFailedStatus, isPaidStatus, verifyNotificationSign } from '@/lib/cashbill/client'
 import { upsertBookingGoogleEvent } from '@/lib/gcal/client'
+import { sendBookingConfirmationEmail } from '@/lib/mail/booking-confirmation'
 
 /**
  * CashBill notification endpoint.
@@ -84,13 +85,20 @@ async function handleNotify(request: Request) {
     if (!booking.gcalEventId) {
       const eventId = await upsertBookingGoogleEvent(booking as any)
       if (eventId) {
-        await payload.update({
+        booking = await payload.update({
           collection: 'bookings',
           id: booking.id,
           data: { gcalEventId: eventId },
+          depth: 1,
           overrideAccess: true,
         })
       }
+    }
+
+    try {
+      await sendBookingConfirmationEmail(booking as any)
+    } catch (error) {
+      console.error('CashBill notify: confirmation email failed', error)
     }
   } else if (isFailedStatus(status) && booking.status === 'pending') {
     await payload.update({

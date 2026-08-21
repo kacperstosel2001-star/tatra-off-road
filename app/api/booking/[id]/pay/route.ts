@@ -22,6 +22,10 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ message: 'Wybierz BLIK albo przelew.' }, { status: 400 })
     }
 
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ message: 'Podaj prawidłowy e-mail — wyślemy potwierdzenie.' }, { status: 400 })
+    }
+
     const payload = await getPayloadClient()
     const booking = await payload.findByID({
       collection: 'bookings',

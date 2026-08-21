@@ -4,6 +4,7 @@ import React from 'react';
 import { Phone, Mail, MapPin, Clock, ArrowRight, CheckCircle } from 'lucide-react';
 import { ContactInfoDTO } from '@/types/payload';
 import { Button } from '../ui/button';
+import { GoogleMapEmbed } from '@/components/common/GoogleMapEmbed';
 
 export function Contact({ dict, contactInfo }: { dict: any; contactInfo: ContactInfoDTO }) {
   return (
@@ -26,7 +27,14 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
               </div>
               <div>
                 <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">Adres</b>
-                <span className="text-[15px] text-[#4a4638]">{contactInfo.address}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contactInfo.address || 'Ul. Świętej Anny 39, 34-521 Ząb')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[15px] text-[#4a4638] underline decoration-stone-line underline-offset-2 hover:text-orange transition-colors"
+                >
+                  {contactInfo.address}
+                </a>
               </div>
             </div>
             
@@ -60,16 +68,8 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
               </div>
             </div>
             
-            <div className="mt-[26px] h-[240px] bg-paper relative overflow-hidden border border-stone-line">
-              <svg viewBox="0 0 500 240" preserveAspectRatio="none" className="w-full h-full">
-                <rect width="500" height="240" fill="#ECE6D6" />
-                <path d="M0 60 H500 M0 120 H500 M0 180 H500" stroke="#C9BFA9" strokeWidth="1" />
-                <path d="M60 0 V240 M180 0 V240 M280 0 V240 M380 0 V240" stroke="#C9BFA9" strokeWidth="1" />
-                <path d="M-10 40 Q 120 10 260 60 T 510 40" stroke="#3E4B39" strokeWidth="3" fill="none" opacity=".6" />
-                <path d="M-10 120 Q 140 90 280 130 T 510 100" stroke="#3E4B39" strokeWidth="2.5" fill="none" opacity=".4" />
-                <path d="M-10 200 Q 100 170 250 200 T 510 190" stroke="#A79C89" strokeWidth="2" fill="none" />
-              </svg>
-              <div className="map-pin"></div>
+            <div className="mt-[26px]">
+              <GoogleMapEmbed address={contactInfo.address} className="h-[240px] lg:h-[280px]" />
             </div>
           </div>
           

@@ -113,6 +113,22 @@ export const BookingSettings: GlobalConfig = {
     },
     {
       type: 'collapsible',
+      label: 'E-mail (SMTP) — potwierdzenia rezerwacji',
+      admin: { initCollapsed: false },
+      fields: [
+        {
+          name: 'smtpInfo',
+          type: 'ui',
+          admin: {
+            components: {
+              Field: '/components/admin/MailTestButton#MailTestButton',
+            },
+          },
+        },
+      ],
+    },
+    {
+      type: 'collapsible',
       label: 'Google Calendar',
       admin: { initCollapsed: false },
       fields: [

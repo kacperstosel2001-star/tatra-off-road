@@ -61,6 +61,7 @@ export interface Booking {
   cashbillChannel?: string | null
   sessionId?: string | null
   gcalEventId?: string | null
+  confirmationEmailSentAt?: string | null
   expiresAt?: string | null
   updatedAt: string
   createdAt: string

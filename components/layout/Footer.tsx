@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { telHref, useContact } from '@/components/providers/ContactProvider'
+import { googleMapsSearchUrl } from '@/components/common/GoogleMapEmbed'
 
 export function Footer({ dict, lang }: { dict: any; lang: string }) {
   const contact = useContact()
   const addressLines = (contact.address || '').split('\n').filter(Boolean)
+  const mapsUrl = googleMapsSearchUrl(contact.address || '')
 
   return (
     <footer className="bg-[#0A0A0A] border-t border-[rgba(245,241,231,0.06)] overflow-hidden">
@@ -74,14 +76,19 @@ export function Footer({ dict, lang }: { dict: any; lang: string }) {
           </h4>
           <address className="not-italic text-stone text-[14px] leading-[1.8] flex flex-col items-start">
             {addressLines.length ? (
-              <span className="mb-2">
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-2 hover:text-orange transition-colors"
+              >
                 {addressLines.map((line, i) => (
                   <React.Fragment key={i}>
                     {line}
                     {i < addressLines.length - 1 ? <br /> : null}
                   </React.Fragment>
                 ))}
-              </span>
+              </a>
             ) : null}
             {contact.phones.map((phone) => (
               <a

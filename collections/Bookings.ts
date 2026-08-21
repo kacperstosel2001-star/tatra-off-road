@@ -256,6 +256,16 @@ export const Bookings: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'confirmationEmailSentAt',
+      type: 'date',
+      label: 'Mail potwierdzenia wysłany',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+    },
+    {
       name: 'expiresAt',
       type: 'date',
       label: 'Wygasa',
