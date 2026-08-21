@@ -12,7 +12,6 @@ import { Hero } from '@/components/home/Hero'
 import { Marquee } from '@/components/home/Marquee'
 import { TrustBar } from '@/components/home/TrustBar'
 import { WhyUs } from '@/components/home/WhyUs'
-import { Fleet } from '@/components/home/Fleet'
 import { Routes } from '@/components/home/Routes'
 import { Pricing } from '@/components/home/Pricing'
 import { Process } from '@/components/home/Process'
@@ -26,6 +25,7 @@ import { Footer } from '@/components/layout/Footer'
 import { StickyMobileCta } from '@/components/common/StickyMobileCta'
 import { WhatsappFloat } from '@/components/common/WhatsappFloat'
 import { SeoContent } from '@/components/common/SeoContent'
+import { translateTripName } from '@/lib/content/english'
 
 export async function generateMetadata({
   params,
@@ -50,12 +50,11 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const locale = (lang === 'en' ? 'en' : 'pl') as Locale
   const dict = await getDictionary(locale)
 
-  const [hero, marquee, features, fleet, routes, trips, steps, reviews, contactInfo, faq, gallery, ctaBanner] =
+  const [hero, marquee, features, routes, tripsRaw, steps, reviews, contactInfo, faq, gallery, ctaBanner] =
     await Promise.all([
       contentService.getHero(locale),
       contentService.getMarquee(locale),
       contentService.getFeatures(locale),
-      contentService.getFleet(locale),
       contentService.getRoutes(locale),
       getActiveTrips(locale),
       contentService.getProcessSteps(locale),
@@ -65,6 +64,11 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       contentService.getGallery(locale),
       contentService.getCtaBanner(locale),
     ])
+
+  const trips = tripsRaw.map((trip) => ({
+    ...trip,
+    name: translateTripName(trip.name, locale),
+  }))
 
   return (
     <>
@@ -76,7 +80,6 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <Marquee phrases={marquee} />
         <TrustBar dict={dict} />
         <WhyUs dict={dict} features={features} />
-        <Fleet dict={dict} fleet={fleet} />
         <Routes dict={dict} routes={routes} />
         <Pricing dict={dict} trips={trips} lang={locale} />
         <Process dict={dict} steps={steps} />

@@ -42,7 +42,7 @@ export function RideClips({ dict, lang = 'pl' }: { dict: any; lang?: Locale }) {
   return (
     <section className="bg-ink text-snow section-pad" id="zjazdy">
       <span className="section-tag" style={{ color: 'var(--color-stone)' }}>
-        07 / {dict.rides.eyebrow.toUpperCase()}
+        06 / {dict.rides.eyebrow.toUpperCase()}
       </span>
       <div className="wrap">
         <div className="shead">

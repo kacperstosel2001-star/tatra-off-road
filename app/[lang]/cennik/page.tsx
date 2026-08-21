@@ -13,6 +13,7 @@ import { PhoneCall } from 'lucide-react'
 import Link from 'next/link'
 import { absoluteUrl, hreflangAlternates, localePath } from '@/lib/i18n'
 import type { Locale } from '@/types/payload'
+import { translateTripName } from '@/lib/content/english'
 
 export async function generateMetadata({
   params,
@@ -36,12 +37,16 @@ export default async function PricingPage({ params }: { params: Promise<{ lang: 
   const { lang } = await params
   const locale = (lang === 'en' ? 'en' : 'pl') as Locale
   const dict = await getDictionary(locale)
-  const [trips, page, faq, contactInfo] = await Promise.all([
+  const [tripsRaw, page, faq, contactInfo] = await Promise.all([
     getActiveTrips(locale),
     contentService.getCennikPage(locale),
     contentService.getFaq(locale),
     contentService.getContactInfo(locale),
   ])
+  const trips = tripsRaw.map((trip) => ({
+    ...trip,
+    name: translateTripName(trip.name, locale),
+  }))
 
   return (
     <>

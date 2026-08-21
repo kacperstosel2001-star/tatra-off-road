@@ -33,9 +33,15 @@
   "trust": {
     "insurance": "Ubezpieczenie NNW",
     "response": "Odpowiedź na zapytanie",
-    "rating": "Ocena na Google (127)",
+    "rating": "Google 5/5",
     "newFleet": "Najnowsza flota Can-Am",
     "cancellation": "Odwołanie bez opłat"
+  },
+  "testimonials": {
+    "eyebrow": "Opinie klientów",
+    "headline": "Co mówią<br/>nasi goście",
+    "subheadline": "Ocena 5/5 na Google. Kilka najświeższych opinii poniżej.",
+    "googleCta": "Zobacz opinie na Google"
   },
   "why": {
     "eyebrow": "Dlaczego My",
@@ -95,7 +101,12 @@
     "formTitle": "Formularz rezerwacji",
     "name": "Imię i nazwisko",
     "message": "Wiadomość (opcjonalnie)",
-    "finePrint": "Odpowiadamy telefonicznie w ciągu 30 minut, 8:00–20:00."
+    "finePrint": "Odpowiadamy telefonicznie w ciągu 30 minut, 8:00–20:00.",
+    "infoTitle": "Dane kontaktowe",
+    "address": "Adres",
+    "phone": "Telefon",
+    "email": "E-mail",
+    "hours": "Godziny"
   },
   "footer": {
     "brand": "Tatra Off-Road",

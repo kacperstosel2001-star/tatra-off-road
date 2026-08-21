@@ -19,7 +19,7 @@ export function FAQ({
 
   return (
     <section className="bg-paper section-pad" id="faq">
-      <span className="section-tag">09 / {dict.nav.faq.toUpperCase()}</span>
+      <span className="section-tag">08 / {dict.nav.faq.toUpperCase()}</span>
       <div className="wrap">
         <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-9 lg:gap-[80px] items-start">
           <div className="faq-side">

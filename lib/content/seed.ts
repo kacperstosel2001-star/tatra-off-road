@@ -465,7 +465,7 @@ export async function seedSiteContent(payload: Payload) {
           secondaryCtaLabel: 'Zobacz ceny',
           badges: [
             { label: 'Can-Am 2025' },
-            { label: 'Ocena 4.9/5' },
+            { label: 'Ocena 5/5' },
             { label: 'Legalne trasy' },
             { label: 'Doświadczeni przewodnicy' },
           ],

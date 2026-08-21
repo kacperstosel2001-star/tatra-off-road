@@ -1,6 +1,18 @@
 import { getPayloadClient } from '@/lib/booking'
 import { resolveMediaUrl, resolveRealMediaUrl } from '@/lib/content/media'
 import {
+  EN_CTA,
+  EN_FAQ,
+  EN_FEATURES,
+  EN_HERO,
+  EN_MARQUEE,
+  EN_META,
+  EN_PROCESS,
+  EN_REVIEWS,
+  EN_ROUTES,
+  EN_PAGE,
+} from '@/lib/content/english'
+import {
   getSiteGallery,
   SITE_CTA_IMAGE,
   SITE_HERO_POSTER,
@@ -136,7 +148,7 @@ const mockHero: HeroDTO = {
   highlightWord: 'przygoda',
   subheadline: 'w terenie',
   lead: 'Wyprawy quadami Can-Am przez lasy i szlaki Podhala. Legalne trasy, doświadczeni przewodnicy, sprzęt 2025.',
-  badges: ['Can-Am 2025', 'Ocena 4.9/5', 'Legalne trasy', 'Doświadczeni przewodnicy'],
+  badges: ['Can-Am 2025', 'Ocena 5/5', 'Legalne trasy', 'Doświadczeni przewodnicy'],
   stats: [
     { value: '8+', label: 'Lat na trasie' },
     { value: '1200+', label: 'Wypraw' },
@@ -172,6 +184,7 @@ const mockCta: CtaBannerDTO = {
 
 export class PayloadContentService implements ContentRepository {
   async getMeta(locale?: Locale): Promise<MetaDTO> {
+    if (loc(locale) === 'en') return t(EN_META)
     try {
       const payload = await getPayloadClient()
       const page = await payload.findGlobal({
@@ -198,6 +211,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getHero(locale?: Locale): Promise<HeroDTO> {
+    if (loc(locale) === 'en') return t(EN_HERO)
     try {
       const payload = await getPayloadClient()
       const page = await payload.findGlobal({
@@ -216,7 +230,10 @@ export class PayloadContentService implements ContentRepository {
         highlightWord: hero.highlightWord || mockHero.highlightWord,
         subheadline: hero.subheadline || mockHero.subheadline,
         lead: hero.lead || mockHero.lead,
-        badges: (hero.badges || []).map((b: any) => b.label).filter(Boolean),
+        badges: (hero.badges || [])
+          .map((b: any) => b.label)
+          .filter(Boolean)
+          .map((label: string) => String(label).replace(/4\.9\s*\/\s*5/gi, '5/5')),
         stats: (hero.stats || []).map((s: any) => ({ value: s.value, label: s.label })),
         mediaType: videoUrl ? 'video' : hero.mediaType === 'video' ? 'video' : 'image',
         bgImage: resolveRealMediaUrl(hero.bgImage, hero.bgImageUrl, SITE_HERO_POSTER),
@@ -243,6 +260,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getCtaBanner(locale?: Locale): Promise<CtaBannerDTO> {
+    if (loc(locale) === 'en') return t(EN_CTA)
     try {
       const payload = await getPayloadClient()
       const page = await payload.findGlobal({
@@ -266,6 +284,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getMarquee(locale?: Locale): Promise<string[]> {
+    if (loc(locale) === 'en') return EN_MARQUEE
     try {
       const payload = await getPayloadClient()
       const page = await payload.findGlobal({
@@ -281,7 +300,7 @@ export class PayloadContentService implements ContentRepository {
       /* fallback */
     }
     return [
-      'Can-Am Outlander 2025',
+      'Can-Am 2025',
       'Podhale & Tatry',
       'Trasy leśne',
       'Trasy górskie',
@@ -291,6 +310,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getFeatures(locale?: Locale): Promise<FeatureDTO[]> {
+    if (loc(locale) === 'en') return t(EN_FEATURES)
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -403,6 +423,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getRoutes(locale?: Locale): Promise<RouteDTO[]> {
+    if (loc(locale) === 'en') return t(EN_ROUTES)
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -472,6 +493,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getProcessSteps(locale?: Locale): Promise<ProcessStepDTO[]> {
+    if (loc(locale) === 'en') return t(EN_PROCESS)
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -527,6 +549,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getReviews(locale?: Locale): Promise<ReviewDTO[]> {
+    if (loc(locale) === 'en') return t(EN_REVIEWS)
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -578,6 +601,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getFaq(locale?: Locale): Promise<FaqDTO[]> {
+    if (loc(locale) === 'en') return t(EN_FAQ)
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -724,6 +748,23 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getFlotaPage(locale?: Locale): Promise<FlotaPageDTO> {
+    if (loc(locale) === 'en') {
+      return t({
+        seo: { ...EN_PAGE.flota.seo },
+        header: { ...EN_PAGE.flota.header },
+        equipment: {
+          eyebrow: 'Gear & safety',
+          title: 'Premium standard\nincluded in the tour',
+          description: 'Every rider gets a full protective kit.',
+          items: [],
+        },
+        cta: {
+          title: 'Ready to ride?',
+          description: 'Pick a date and book your quad online.',
+          buttonLabel: 'Book now',
+        },
+      })
+    }
     const fallback: FlotaPageDTO = {
       seo: {
         title: 'Flota Quadów Can-Am 2025 | Tatra Off-Road',
@@ -787,6 +828,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getTrasyPage(locale?: Locale): Promise<SimplePageDTO> {
+    if (loc(locale) === 'en') return t({ seo: { ...EN_PAGE.trasy.seo }, header: { ...EN_PAGE.trasy.header } })
     return this.getSimplePage('trasy-page', locale, {
       seo: {
         title: 'Trasy quadowe Podhale | Tatra Off-Road',
@@ -800,6 +842,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getCennikPage(locale?: Locale): Promise<SimplePageDTO> {
+    if (loc(locale) === 'en') return t({ seo: { ...EN_PAGE.cennik.seo }, header: { ...EN_PAGE.cennik.header } })
     return this.getSimplePage('cennik-page', locale, {
       seo: {
         title: 'Cennik wypraw quadowych | Tatra Off-Road',
@@ -813,6 +856,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getAboutPage(locale?: Locale): Promise<SimplePageDTO> {
+    if (loc(locale) === 'en') return t({ seo: { ...EN_PAGE.about.seo }, header: { ...EN_PAGE.about.header } })
     return this.getSimplePage('about-page', locale, {
       seo: {
         title: 'O nas | Tatra Off-Road',
@@ -826,6 +870,7 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getContactPage(locale?: Locale): Promise<SimplePageDTO> {
+    if (loc(locale) === 'en') return t({ seo: { ...EN_PAGE.contact.seo }, header: { ...EN_PAGE.contact.header } })
     return this.getSimplePage('contact-page', locale, {
       seo: {
         title: 'Kontakt | Tatra Off-Road',

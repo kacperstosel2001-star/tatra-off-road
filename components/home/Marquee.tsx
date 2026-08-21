@@ -5,7 +5,7 @@ export function Marquee({ phrases }: { phrases: string[] }) {
   const items = phrases.length
     ? phrases
     : [
-        'Can-Am Outlander 2025',
+        'Can-Am 2025',
         'Podhale & Tatry',
         'Trasy leśne',
         'Trasy górskie',

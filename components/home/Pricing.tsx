@@ -52,7 +52,7 @@ export function Pricing({
 
   return (
     <section className="bg-paper overflow-hidden section-pad" id="cennik">
-      <span className="section-tag">04 / {dict.nav.pricing.toUpperCase()}</span>
+      <span className="section-tag">03 / {dict.nav.pricing.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.pricing.eyebrow}</span>

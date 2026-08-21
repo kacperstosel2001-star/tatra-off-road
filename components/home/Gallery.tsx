@@ -17,7 +17,7 @@ export function Gallery({ dict, items }: { dict: any; items: GalleryItemDTO[] })
 
   return (
     <section className="bg-snow section-pad" id="galeria">
-      <span className="section-tag">06 / {dict.nav.gallery.toUpperCase()}</span>
+      <span className="section-tag">05 / {dict.nav.gallery.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.gallery.eyebrow}</span>

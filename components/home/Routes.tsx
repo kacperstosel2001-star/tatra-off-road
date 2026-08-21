@@ -8,7 +8,7 @@ import { Map, Clock } from 'lucide-react';
 export function Routes({ dict, routes }: { dict: any; routes: RouteDTO[] }) {
   return (
     <section className="bg-snow section-pad" id="trasy">
-      <span className="section-tag">03 / {dict.nav.routes.toUpperCase()}</span>
+      <span className="section-tag">02 / {dict.nav.routes.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.routes.eyebrow}</span>

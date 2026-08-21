@@ -32,9 +32,15 @@
   "trust": {
     "insurance": "Versicherung inklusive",
     "response": "Antwortzeit",
-    "rating": "Google Bewertung (127)",
+    "rating": "Google 5/5",
     "newFleet": "Neueste Can-Am Flotte",
     "cancellation": "Kostenlose Stornierung"
+  },
+  "testimonials": {
+    "eyebrow": "Kundenstimmen",
+    "headline": "Was unsere<br/>Gäste sagen",
+    "subheadline": "Google-Bewertung 5/5. Einige der neuesten Stimmen unten.",
+    "googleCta": "Bewertungen auf Google ansehen"
   },
   "why": {
     "eyebrow": "Warum Wir",
@@ -94,7 +100,12 @@
     "formTitle": "Buchungsformular",
     "name": "Vor- und Nachname",
     "message": "Nachricht (optional)",
-    "finePrint": "Wir antworten telefonisch innerhalb von 30 Minuten, 8:00–20:00."
+    "finePrint": "Wir antworten telefonisch innerhalb von 30 Minuten, 8:00–20:00.",
+    "infoTitle": "Kontaktdaten",
+    "address": "Adresse",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "hours": "Öffnungszeiten"
   },
   "footer": {
     "brand": "Tatra Off-Road",

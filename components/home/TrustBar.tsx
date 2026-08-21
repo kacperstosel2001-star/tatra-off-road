@@ -20,7 +20,7 @@ export function TrustBar({ dict }: { dict: any }) {
 
         <div className="text-left pb-4 lg:pb-0 lg:px-[26px] lg:border-r border-b lg:border-b-0 border-stone-line flex flex-col gap-[6px] border-r-0 lg:border-r">
           <div className="w-[34px] h-[34px] text-orange mb-3"><Star className="w-full h-full fill-orange text-orange" /></div>
-          <div className="font-display text-[36px] text-ink leading-none">4.9/5</div>
+          <div className="font-display text-[36px] text-ink leading-none">5/5</div>
           <div className="font-label uppercase tracking-[0.1em] text-[11.5px] font-semibold text-[#5a5544]">{dict.trust.rating}</div>
         </div>
 

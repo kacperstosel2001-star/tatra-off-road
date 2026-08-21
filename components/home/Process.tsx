@@ -17,7 +17,7 @@ export function Process({ dict, steps }: { dict: any; steps: ProcessStepDTO[] })
 
   return (
     <section className="bg-ink text-snow section-pad">
-      <span className="section-tag" style={{ color: 'var(--color-stone)' }}>05 / {dict.process.eyebrow.toUpperCase()}</span>
+      <span className="section-tag" style={{ color: 'var(--color-stone)' }}>04 / {dict.process.eyebrow.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.process.eyebrow}</span>

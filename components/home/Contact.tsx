@@ -9,7 +9,7 @@ import { GoogleMapEmbed } from '@/components/common/GoogleMapEmbed';
 export function Contact({ dict, contactInfo }: { dict: any; contactInfo: ContactInfoDTO }) {
   return (
     <section className="bg-snow section-pad" id="kontakt">
-      <span className="section-tag">10 / {dict.nav.contact.toUpperCase()}</span>
+      <span className="section-tag">09 / {dict.nav.contact.toUpperCase()}</span>
       <div className="wrap">
         <div className="shead">
           <span className="eyebrow">{dict.contact.eyebrow}</span>
@@ -19,14 +19,14 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-9 lg:gap-[60px]">
           <div className="contact-info">
-            <h3 className="font-label uppercase tracking-[0.1em] text-[14px] font-bold text-stone m-0 mb-2">Dane kontaktowe</h3>
+            <h3 className="font-label uppercase tracking-[0.1em] text-[14px] font-bold text-stone m-0 mb-2">{dict.contact.infoTitle}</h3>
             
             <div className="flex gap-[18px] items-start py-[22px] border-t border-paper-2">
               <div className="w-11 h-11 bg-ink text-orange flex items-center justify-center flex-none">
                 <MapPin className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">Adres</b>
+                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">{dict.contact.address}</b>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contactInfo.address || 'Ul. Świętej Anny 39, 34-521 Ząb')}`}
                   target="_blank"
@@ -43,7 +43,7 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
                 <Phone className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">Telefon</b>
+                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">{dict.contact.phone}</b>
                 <span className="text-[15px] text-[#4a4638]">{contactInfo.phones.join(' · ')}</span>
               </div>
             </div>
@@ -53,7 +53,7 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
                 <Mail className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">E-mail</b>
+                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">{dict.contact.email}</b>
                 <span className="text-[15px] text-[#4a4638]">{contactInfo.email}</span>
               </div>
             </div>
@@ -63,7 +63,7 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
                 <Clock className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">Godziny</b>
+                <b className="block font-label text-[15px] uppercase tracking-[0.06em] mb-0.5">{dict.contact.hours}</b>
                 <span className="text-[15px] text-[#4a4638]">{contactInfo.hours}</span>
               </div>
             </div>
@@ -82,7 +82,7 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
                 <input type="text" placeholder="Jan Kowalski" required className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
               </div>
               <div>
-                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">Telefon</label>
+                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.phone}</label>
                 <input type="tel" placeholder="+48 ___ ___ ___" required className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
               </div>
             </div>
