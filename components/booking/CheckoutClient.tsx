@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { localePath } from '@/lib/i18n'
+import { bookingUi } from '@/lib/content/booking-ui'
+import { translateTripName } from '@/lib/content/english'
 
 type BookingPayload = {
   id: string | number
@@ -71,6 +73,7 @@ function useCountdown(expiresAt?: string | null) {
 }
 
 export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; lang?: string }) {
+  const ui = bookingUi(lang).checkout
   const searchParams = useSearchParams()
   const [booking, setBooking] = useState<BookingPayload | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,8 +85,8 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
   const [email, setEmail] = useState('')
   const [method, setMethod] = useState<'blik' | 'transfer'>('blik')
   const [methods, setMethods] = useState<PayMethod[]>([
-    { id: 'blik', label: 'BLIK', description: 'Szybka płatność kodem BLIK' },
-    { id: 'transfer', label: 'Przelew bankowy', description: 'Płatność przelewem / szybkim przelewem' },
+    { id: 'blik', label: 'BLIK', description: '' },
+    { id: 'transfer', label: 'Transfer', description: '' },
   ])
   const [cashbillMode, setCashbillMode] = useState<'test' | 'live'>('test')
   const countdown = useCountdown(booking?.status === 'pending' ? booking.expiresAt : null)
@@ -96,10 +99,15 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           setMethods(
             data.methods.map((m: PayMethod) => ({
               id: m.id,
-              label: m.label,
-              description: m.description,
+              label: m.id === 'blik' ? ui.blik : m.id === 'transfer' ? ui.transfer : m.label,
+              description: m.id === 'blik' ? ui.blikDesc : m.id === 'transfer' ? ui.transferDesc : m.description,
             })),
           )
+        } else {
+          setMethods([
+            { id: 'blik', label: ui.blik, description: ui.blikDesc },
+            { id: 'transfer', label: ui.transfer, description: ui.transferDesc },
+          ])
         }
         if (data.mode === 'live' || data.mode === 'test') setCashbillMode(data.mode)
       })
@@ -117,20 +125,22 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
       .then((r) => r.json())
       .then((data) => {
         if (!data.booking) {
-          setError(data.message || 'Nie znaleziono rezerwacji.')
+          setError(data.message || ui.notFound)
           return
         }
-        setBooking(data.booking)
+        const b = data.booking
+        if (b?.trip?.name) b.trip.name = translateTripName(b.trip.name, lang === 'en' ? 'en' : 'pl')
+        setBooking(b)
         setFirstName(data.booking.customerFirstName || '')
         setLastName(data.booking.customerLastName || '')
         setEmail(data.booking.customerEmail || '')
         if (data.booking.paymentStatus === 'deposit_paid' || data.booking.status === 'deposit_paid') {
           window.location.replace(localePath(lang, `/kasa/${bookingId}/dziekujemy`))
         } else if (paymentParam === 'cancel') {
-          setError('Płatność została anulowana. Możesz spróbować ponownie.')
+          setError(ui.cancelled)
         }
       })
-      .catch(() => setError('Nie udało się pobrać rezerwacji.'))
+      .catch(() => setError(ui.loadError))
       .finally(() => setLoading(false))
   }, [bookingId, searchParams, lang])
 
@@ -146,7 +156,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.message || 'Płatność nieudana.')
+        setError(data.message || ui.payFail)
         return
       }
       if (data.alreadyPaid) {
@@ -157,9 +167,9 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         window.location.href = data.redirectUrl
         return
       }
-      setError('CashBill nie zwrócił adresu płatności.')
+      setError(ui.noUrl)
     } catch {
-      setError('Błąd połączenia.')
+      setError(ui.connection)
     } finally {
       setPaying(false)
     }
@@ -180,7 +190,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
       <div className="booking-shell">
         <p className="text-[#b32d2e] m-0">{error || 'Brak rezerwacji.'}</p>
         <Link href={localePath(lang, '/rezerwacja')} className="btn btn-primary mt-6 inline-flex">
-          Wróć do rezerwacji
+          {ui.backToBooking}
         </Link>
       </div>
     )
@@ -190,16 +200,16 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
     <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-6 lg:gap-8 items-start pb-[calc(var(--site-sticky-cta)+1rem)] lg:pb-0">
       <div className="booking-shell min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-6 text-[11px] sm:text-[12px] font-label uppercase tracking-[0.08em] sm:tracking-[0.1em] text-stone">
-          <span className="text-ink font-bold">1. Rezerwacja</span>
+          <span className="text-ink font-bold">{ui.stepBooking}</span>
           <span aria-hidden>→</span>
-          <span className="text-orange font-bold">2. Płatność</span>
+          <span className="text-orange font-bold">{ui.stepPay}</span>
           <span aria-hidden>→</span>
           <span>3. Potwierdzenie</span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
           <h1 className="font-display text-[28px] sm:text-[36px] lg:text-[44px] uppercase m-0 leading-[0.95]">
-            Opłać zaliczkę
+            {ui.payDeposit}
           </h1>
           {cashbillMode === 'test' ? (
             <span className="font-label text-[11px] uppercase tracking-[0.1em] px-3 py-1.5 bg-ink text-snow self-start flex-none">
@@ -208,7 +218,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           ) : null}
         </div>
         <p className="text-[#4a4638] m-0 mb-8 text-[15px]">
-          Resztę ({booking.remainingAmount ?? 0} zł) zapłacisz na miejscu przed startem.
+          {ui.restOnSite.replace('{amount}', String(booking.remainingAmount ?? 0))}
         </p>
 
         {countdown && booking.status === 'pending' ? (
@@ -221,7 +231,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           >
             <Clock size={18} className="flex-none" />
             {countdown.expired ? (
-              <span>Czas na płatność minął — zarezerwuj termin ponownie.</span>
+              <span>{ui.holdExpiredLong}</span>
             ) : (
               <span>
                 Trzymamy termin jeszcze <strong className="font-mono text-[16px]">{countdown.label}</strong>
@@ -232,8 +242,8 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
 
         <div className="grid gap-0 text-[15px] mb-8">
           <div className="flex justify-between border-b border-stone-line py-3 gap-3">
-            <span className="text-stone">Wyprawa</span>
-            <strong className="text-right">{booking.trip?.name || 'Wyprawa quadowa'}</strong>
+            <span className="text-stone">{ui.trip}</span>
+            <strong className="text-right">{booking.trip?.name || ui.trip}</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3 gap-3">
             <span className="text-stone">Termin</span>
@@ -245,19 +255,19 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           <div className="flex justify-between border-b border-stone-line py-3 gap-3">
             <span className="text-stone">Uczestnicy</span>
             <strong>
-              {booking.drivers} kier. / {booking.passengers} pas.
+              {ui.driversPassengers.replace('{drivers}', String(booking.drivers)).replace('{passengers}', String(booking.passengers))}
             </strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3 gap-3">
-            <span className="text-stone">Cena pełna</span>
+            <span className="text-stone">{ui.fullPrice}</span>
             <strong>{booking.fullPrice ?? 0} zł</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3 gap-3">
-            <span className="text-stone">Zaliczka teraz</span>
+            <span className="text-stone">{ui.depositNow}</span>
             <strong className="text-orange text-[24px] font-display">{booking.depositAmount ?? 0} zł</strong>
           </div>
           <div className="flex justify-between py-3 gap-3">
-            <span className="text-stone">Na miejscu</span>
+            <span className="text-stone">{ui.remainingLabel}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
         </div>
@@ -266,9 +276,9 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           <div className="bg-ink text-snow p-6 flex gap-4 items-start">
             <CheckCircle2 className="text-orange flex-none mt-1" />
             <div>
-              <h2 className="font-display text-[28px] uppercase m-0 mb-2">Rezerwacja potwierdzona</h2>
+              <h2 className="font-display text-[28px] uppercase m-0 mb-2">{ui.confirmed}</h2>
               <p className="m-0 text-[15px] opacity-90">
-                Zaliczka przyjęta. Numer #{booking.id}.
+                {ui.accepted.replace('{id}', String(booking.id))}
               </p>
               <Link
                 href={localePath(lang, `/kasa/${bookingId}/dziekujemy`)}
@@ -280,13 +290,13 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           </div>
         ) : countdown?.expired ? (
           <Link href={localePath(lang, '/rezerwacja')} className="btn btn-primary">
-            Wybierz nowy termin
+            {ui.newDate}
           </Link>
         ) : (
           <form onSubmit={pay} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Imię</span>
+                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.firstName}</span>
                 <input
                   className="booking-input"
                   value={firstName}
@@ -295,7 +305,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Nazwisko</span>
+                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.lastName}</span>
                 <input
                   className="booking-input"
                   value={lastName}
@@ -306,7 +316,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             </div>
             <label className="flex flex-col gap-1.5">
               <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">
-                E-mail
+                {ui.email}
               </span>
               <input
                 type="email"
@@ -316,12 +326,12 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
                 required
                 autoComplete="email"
               />
-              <span className="text-[12px] text-stone">Na ten adres wyślemy potwierdzenie rezerwacji.</span>
+              <span className="text-[12px] text-stone">{ui.emailHint}</span>
             </label>
 
             <fieldset className="m-0 p-0 border-0">
               <legend className="font-label text-[12px] uppercase tracking-[0.08em] font-bold mb-3">
-                Metoda płatności
+                {ui.method}
               </legend>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {methods.map((m) => {
@@ -353,17 +363,17 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
 
             <button type="submit" disabled={paying} className="btn btn-primary justify-center w-full sm:w-auto">
               {paying ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} />}
-              Zapłać zaliczkę {booking.depositAmount ?? 0} zł
+              {ui.payDepositAmount.replace('{amount}', String(booking.depositAmount ?? 0))}
             </button>
             <p className="text-[13px] text-stone m-0">
               Bezpieczne przekierowanie do CashBill
-              {cashbillMode === 'test' ? ' (środowisko testowe)' : ''}.
+              {cashbillMode === 'test' ? ui.testEnv : ''}.
             </p>
             <Link
               href={localePath(lang, '/rezerwacja')}
               className="inline-flex items-center gap-2 text-[13px] font-label uppercase tracking-[0.08em] font-bold text-stone hover:text-ink"
             >
-              <ArrowLeft size={14} /> Zmień termin
+              <ArrowLeft size={14} /> {ui.changeDate}
             </Link>
           </form>
         )}
@@ -371,29 +381,29 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
 
       <aside className="bg-ink text-snow p-6 lg:p-8 h-fit lg:sticky lg:top-[calc(var(--site-header)+var(--site-tread)+1rem)]">
         <p className="font-label text-[11px] uppercase tracking-[0.12em] text-orange m-0 mb-3">
-          Rezerwacja #{booking.id}
+          {ui.bookingHash.replace('{id}', String(booking.id))}
         </p>
         <h2 className="font-display text-[28px] uppercase m-0 mb-4 leading-none">Podsumowanie</h2>
         <p className="m-0 mb-2 opacity-80 text-[14px]">
-          Telefon: <strong>{booking.customerPhone}</strong>
+          {ui.phone}: <strong>{booking.customerPhone}</strong>
         </p>
         <p className="m-0 mb-6 opacity-80 text-[14px]">
           {booking.customerFirstName} {booking.customerLastName}
         </p>
         <div className="border-t border-[rgba(245,241,231,0.12)] pt-5 grid gap-2 text-[14px]">
           <div className="flex justify-between">
-            <span className="opacity-60">Zaliczka</span>
+            <span className="opacity-60">{ui.depositLabel}</span>
             <strong className="text-orange text-[22px] font-display">{booking.depositAmount ?? 0} zł</strong>
           </div>
           <div className="flex justify-between opacity-80">
-            <span>Na miejscu</span>
+            <span>{ui.remainingLabel}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
         </div>
         <ul className="mt-6 mb-0 pl-4 text-[13px] opacity-75 grid gap-2">
-          <li>Po płatności dostaniesz potwierdzenie</li>
-          <li>Przyjedź 10–15 min przed startem</li>
-          <li>Anulacja / zmiana: min. 24h wcześniej</li>
+          <li>{ui.afterPay}</li>
+          <li>{ui.arriveEarly}</li>
+          <li>{ui.cancelRule}</li>
         </ul>
       </aside>
     </div>

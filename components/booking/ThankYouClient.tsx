@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { localePath } from '@/lib/i18n'
+import { bookingUi } from '@/lib/content/booking-ui'
+import { translateTripName } from '@/lib/content/english'
 import { CheckCircle2, Loader2, AlertCircle, Phone, ArrowRight } from 'lucide-react'
 
 type BookingPayload = {
@@ -40,6 +42,7 @@ function formatDate(value: string) {
 }
 
 export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; lang?: string }) {
+  const ui = bookingUi(lang).thanks
   const [booking, setBooking] = useState<BookingPayload | null>(null)
   const [paid, setPaid] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -59,11 +62,13 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
       if (cancelled) return false
 
       if (!res.ok || !data.ok) {
-        setError(data.message || 'Nie udało się potwierdzić płatności.')
+        setError(data.message || ui.syncError)
         return false
       }
 
-      setBooking(data.booking)
+      const b = data.booking
+        if (b?.trip?.name) b.trip.name = translateTripName(b.trip.name, lang === 'en' ? 'en' : 'pl')
+        setBooking(b)
       if (data.paid) {
         setPaid(true)
         setFailed(false)
@@ -93,7 +98,7 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         setLoading(false)
       } catch {
         if (!cancelled) {
-          setError('Błąd połączenia podczas potwierdzania płatności.')
+          setError(ui.syncFail)
           setLoading(false)
         }
       }
@@ -122,9 +127,9 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         <div className="flex gap-4 items-start mb-6">
           <AlertCircle className="text-[#b32d2e] flex-none mt-1" />
           <div>
-            <h1 className="font-display text-[36px] uppercase m-0 mb-2">Płatność nieudana</h1>
+            <h1 className="font-display text-[36px] uppercase m-0 mb-2">{ui.paymentFailed}</h1>
             <p className="text-stone m-0">
-              Transakcja nie została zakończona. Możesz wrócić do kasy i spróbować ponownie.
+              {ui.paymentFailedHint}
             </p>
           </div>
         </div>
@@ -132,7 +137,7 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           href={localePath(lang, `/kasa/${bookingId}`)}
           className="inline-flex items-center gap-2 bg-orange text-ink font-label uppercase tracking-[0.08em] font-bold px-6 py-4"
         >
-          Wróć do kasy <ArrowRight size={18} />
+          {ui.backToCheckout} <ArrowRight size={18} />
         </Link>
       </div>
     )
@@ -144,10 +149,10 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         <div className="flex gap-4 items-start mb-6">
           <AlertCircle className="text-orange flex-none mt-1" />
           <div>
-            <h1 className="font-display text-[36px] uppercase m-0 mb-2">Czekamy na potwierdzenie</h1>
+            <h1 className="font-display text-[36px] uppercase m-0 mb-2">{ui.waiting}</h1>
             <p className="text-stone m-0 mb-3">
               {error ||
-                'Płatność mogła jeszcze nie dojść do CashBill. Odśwież za chwilę albo zadzwoń — potwierdzimy ręcznie.'}
+                ui.waitingHint}
             </p>
             {booking?.cashbillPaymentId && (
               <p className="text-[13px] text-stone m-0">ID płatności: {booking.cashbillPaymentId}</p>
@@ -166,7 +171,7 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             href="tel:+48888254223"
             className="inline-flex items-center gap-2 border border-stone-line px-6 py-4 font-label uppercase tracking-[0.08em] font-bold"
           >
-            <Phone size={16} /> Zadzwoń
+            <Phone size={16} /> {lang === 'en' ? 'Call' : 'Zadzwoń'}
           </a>
         </div>
       </div>
@@ -189,41 +194,41 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           <CheckCircle2 className="text-orange flex-none mt-1" size={36} />
           <div>
             <p className="font-label text-[12px] uppercase tracking-[0.1em] text-orange m-0 mb-2">
-              Dziękujemy
+              {lang === 'en' ? 'Thank you' : 'Dziękujemy'}
             </p>
-            <h1 className="font-display text-[40px] uppercase m-0 mb-3">Rezerwacja potwierdzona</h1>
+            <h1 className="font-display text-[40px] uppercase m-0 mb-3">{ui.confirmed}</h1>
             <p className="text-[#4a4638] m-0 text-[16px]">
-              Zaliczka została opłacona
-              {booking.customerEmail ? ` — potwierdzenie wysłaliśmy na ${booking.customerEmail}` : ''}.
-              Na miejscu zapłacisz resztę przed startem wyprawy.
+              {booking.customerEmail
+                ? ui.paidHintEmail.replace('{email}', booking.customerEmail)
+                : ui.paidHint}
             </p>
           </div>
         </div>
 
         <div className="grid gap-0 text-[15px]">
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Numer rezerwacji</span>
+            <span>{ui.bookingNo}</span>
             <strong>#{booking.id}</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Wyprawa</span>
-            <strong className="text-right">{booking.trip?.name || 'Wyprawa quadowa'}</strong>
+            <span>{ui.trip}</span>
+            <strong className="text-right">{booking.trip?.name || ui.trip}</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Termin</span>
+            <span>{ui.when}</span>
             <strong>
               {formatDate(booking.bookingDate)} · {String(booking.bookingTime).slice(0, 5)}
               {booking.reservationEndTime ? `–${String(booking.reservationEndTime).slice(0, 5)}` : ''}
             </strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Uczestnicy</span>
+            <span>{ui.people}</span>
             <strong>
-              {booking.drivers} kier. / {booking.passengers} pas.
+              {bookingUi(lang).checkout.driversPassengers.replace('{drivers}', String(booking.drivers)).replace('{passengers}', String(booking.passengers))}
             </strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Klient</span>
+            <span>{ui.customer}</span>
             <strong className="text-right">
               {fullName || '—'}
               <br />
@@ -231,19 +236,19 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             </strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Płatność</span>
+            <span>{ui.payment}</span>
             <strong>{methodLabel(booking.paymentMethod)}</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Zaliczka opłacona</span>
+            <span>{ui.depositPaid}</span>
             <strong className="text-orange text-[22px]">{booking.depositAmount ?? 0} zł</strong>
           </div>
           <div className="flex justify-between border-b border-stone-line py-3">
-            <span>Reszta na miejscu</span>
+            <span>{ui.remaining}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
           <div className="flex justify-between py-3">
-            <span>Cena pełna</span>
+            <span>{ui.fullPrice}</span>
             <strong>{booking.fullPrice ?? 0} zł</strong>
           </div>
         </div>
@@ -253,7 +258,7 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             href={localePath(lang, '/')}
             className="btn btn-primary"
           >
-            Strona główna
+            {ui.home}
           </Link>
           <a
             href="tel:+48888254223"
@@ -265,13 +270,13 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
       </div>
 
       <aside className="bg-ink text-snow p-6 lg:p-8 h-fit">
-        <h2 className="font-display text-[28px] uppercase m-0 mb-4">Co dalej?</h2>
+        <h2 className="font-display text-[28px] uppercase m-0 mb-4">{ui.nextTitle}</h2>
         <ol className="m-0 pl-5 grid gap-4 text-[15px] opacity-90">
-          <li>Zapisz numer rezerwacji #{booking.id}.</li>
-          <li>Bądź 15 minut wcześniej na miejscu.</li>
-          <li>Kierowca musi mieć prawo jazdy kat. B.</li>
-          <li>Na miejscu dopłacisz {booking.remainingAmount ?? 0} zł i dostaniesz briefing.</li>
-          <li>Zmiana / anulacja: zadzwoń min. 24h wcześniej.</li>
+          <li>{ui.next1.replace('{id}', String(booking.id))}</li>
+          <li>{ui.next2}</li>
+          <li>{ui.next3}</li>
+          <li>{ui.next4.replace('{amount}', String(booking.remainingAmount ?? 0))}</li>
+          <li>{ui.next5}</li>
         </ol>
         {booking.cashbillPaymentId && (
           <p className="mt-6 mb-0 text-[12px] opacity-50">CashBill: {booking.cashbillPaymentId}</p>

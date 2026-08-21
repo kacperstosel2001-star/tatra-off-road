@@ -42,7 +42,6 @@ export function Header({ dict, lang }: { dict: any; lang: string }) {
 
   const navLinks = [
     { href: localePath(lang, '/'), label: dict.nav.home },
-    { href: localePath(lang, '/flota'), label: dict.nav.fleet },
     { href: localePath(lang, '/trasy'), label: dict.nav.routes },
     { href: localePath(lang, '/cennik'), label: dict.nav.pricing },
     { href: localePath(lang, '/about'), label: dict.nav.about },
@@ -95,7 +94,7 @@ export function Header({ dict, lang }: { dict: any; lang: string }) {
             <a
               href={telHref(primaryPhone)}
               className="flex items-center justify-center w-10 h-10 text-snow"
-              aria-label="Zadzwoń"
+              aria-label={lang === 'en' ? 'Call' : 'Zadzwoń'}
             >
               <Phone className="w-5 h-5 text-orange" />
             </a>
@@ -104,7 +103,15 @@ export function Header({ dict, lang }: { dict: any; lang: string }) {
               type="button"
               className="text-snow p-2 -mr-1 focus:outline-none"
               onClick={() => setIsMobileMenuOpen((v) => !v)}
-              aria-label={isMobileMenuOpen ? 'Zamknij menu' : 'Otwórz menu'}
+              aria-label={
+                isMobileMenuOpen
+                  ? lang === 'en'
+                    ? 'Close menu'
+                    : 'Zamknij menu'
+                  : lang === 'en'
+                    ? 'Open menu'
+                    : 'Otwórz menu'
+              }
               aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X size={26} className="text-orange" /> : <Menu size={26} />}

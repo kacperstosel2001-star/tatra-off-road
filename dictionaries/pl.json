@@ -34,7 +34,7 @@
     "insurance": "Ubezpieczenie NNW",
     "response": "Odpowiedź na zapytanie",
     "rating": "Google 5/5",
-    "newFleet": "Najnowsza flota Can-Am",
+    "newFleet": "Sprzęt Can-Am 2025",
     "cancellation": "Odwołanie bez opłat"
   },
   "testimonials": {
@@ -100,6 +100,14 @@
     "subheadline": "Zadzwoń lub wypełnij formularz — odezwiemy się w ciągu 30 minut, żeby potwierdzić termin i pakiet.",
     "formTitle": "Formularz rezerwacji",
     "name": "Imię i nazwisko",
+    "tourDate": "Data wyprawy",
+    "package": "Pakiet",
+    "persons": "Liczba osób",
+    "package1h": "Wycieczka 1 godzinna",
+    "package2h": "Wycieczka 2 godzinna",
+    "packageGroup": "Grupa / Firma",
+    "namePlaceholder": "Jan Kowalski",
+    "messagePlaceholder": "Dodatkowe informacje o wyprawie, terminie, grupie...",
     "message": "Wiadomość (opcjonalnie)",
     "finePrint": "Odpowiadamy telefonicznie w ciągu 30 minut, 8:00–20:00.",
     "infoTitle": "Dane kontaktowe",

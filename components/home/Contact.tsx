@@ -6,7 +6,15 @@ import { ContactInfoDTO } from '@/types/payload';
 import { Button } from '../ui/button';
 import { GoogleMapEmbed } from '@/components/common/GoogleMapEmbed';
 
-export function Contact({ dict, contactInfo }: { dict: any; contactInfo: ContactInfoDTO }) {
+export function Contact({
+  dict,
+  contactInfo,
+  lang = 'pl',
+}: {
+  dict: any
+  contactInfo: ContactInfoDTO
+  lang?: string
+}) {
   return (
     <section className="bg-snow section-pad" id="kontakt">
       <span className="section-tag">09 / {dict.nav.contact.toUpperCase()}</span>
@@ -69,7 +77,11 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
             </div>
             
             <div className="mt-[26px]">
-              <GoogleMapEmbed address={contactInfo.address} className="h-[240px] lg:h-[280px]" />
+              <GoogleMapEmbed
+                address={contactInfo.address}
+                lang={lang}
+                className="h-[240px] lg:h-[280px]"
+              />
             </div>
           </div>
           
@@ -79,7 +91,7 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.name}</label>
-                <input type="text" placeholder="Jan Kowalski" required className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
+                <input type="text" placeholder={dict.contact.namePlaceholder || 'Jan Kowalski'} required className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
               </div>
               <div>
                 <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.phone}</label>
@@ -89,27 +101,27 @@ export function Contact({ dict, contactInfo }: { dict: any; contactInfo: Contact
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">Data wyprawy</label>
+                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.tourDate}</label>
                 <input type="date" className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
               </div>
               <div>
-                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">Pakiet</label>
+                <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.package}</label>
                 <select className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1 appearance-none rounded-none">
-                  <option>Wycieczka 1 godzinna</option>
-                  <option>Wycieczka 2 godzinna</option>
-                  <option>Grupa / Firma</option>
+                  <option>{dict.contact.package1h}</option>
+                  <option>{dict.contact.package2h}</option>
+                  <option>{dict.contact.packageGroup}</option>
                 </select>
               </div>
             </div>
             
             <div>
-              <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">Liczba osób</label>
+              <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.persons}</label>
               <input type="number" min="1" defaultValue="2" className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink focus:outline-2 focus:outline-orange focus:outline-offset-1" />
             </div>
             
             <div>
               <label className="font-label uppercase tracking-[0.08em] text-[11.5px] font-bold text-stone mb-1.5 block">{dict.contact.message}</label>
-              <textarea placeholder="Dodatkowe informacje o wyprawie, terminie, grupie..." className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink min-h-[100px] resize-y focus:outline-2 focus:outline-orange focus:outline-offset-1"></textarea>
+              <textarea placeholder={dict.contact.messagePlaceholder} className="w-full border border-stone-line bg-snow p-[14px] font-body text-[15px] text-ink min-h-[100px] resize-y focus:outline-2 focus:outline-orange focus:outline-offset-1"></textarea>
             </div>
             
             <Button variant="primary" type="submit" className="mt-2 w-fit">

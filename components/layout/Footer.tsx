@@ -39,9 +39,6 @@ export function Footer({ dict, lang }: { dict: any; lang: string }) {
               <Link href={localePath(lang, '/about')}>{dict.nav.about}</Link>
             </li>
             <li className="mb-[11px] text-[14.5px] text-stone transition-colors duration-200 hover:text-orange">
-              <Link href={localePath(lang, '/flota')}>{dict.nav.fleet}</Link>
-            </li>
-            <li className="mb-[11px] text-[14.5px] text-stone transition-colors duration-200 hover:text-orange">
               <Link href={localePath(lang, '/trasy')}>{dict.nav.routes}</Link>
             </li>
             <li className="mb-[11px] text-[14.5px] text-stone transition-colors duration-200 hover:text-orange">

@@ -7,10 +7,20 @@ import { Footer } from '@/components/layout/Footer'
 import { ThankYouClient } from '@/components/booking/ThankYouClient'
 import { Metadata } from 'next'
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const isEn = lang === 'en'
   return {
-    title: 'Dziękujemy — rezerwacja potwierdzona | Tatra Off-Road',
-    description: 'Podsumowanie rezerwacji i opłaconej zaliczki.',
+    title: isEn
+      ? 'Thank you — booking confirmed | Tatra Off-Road'
+      : 'Dziękujemy — rezerwacja potwierdzona | Tatra Off-Road',
+    description: isEn
+      ? 'Booking summary and paid deposit.'
+      : 'Podsumowanie rezerwacji i opłaconej zaliczki.',
     robots: { index: false, follow: false },
   }
 }
@@ -21,7 +31,8 @@ export default async function ThankYouPage({
   params: Promise<{ lang: string; id: string }>
 }) {
   const { lang, id } = await params
-  const dict = await getDictionary((lang === 'en' ? 'en' : 'pl') as 'pl' | 'en')
+  const isEn = lang === 'en'
+  const dict = await getDictionary((isEn ? 'en' : 'pl') as 'pl' | 'en')
 
   return (
     <>
@@ -29,12 +40,19 @@ export default async function ThankYouPage({
       <Header dict={dict} lang={lang} />
       <main className="bg-paper min-h-screen">
         <PageHeader
-          title="Dziękujemy"
-          description="Potwierdzenie rezerwacji i podsumowanie płatności."
+          title={isEn ? 'Thank you' : 'Dziękujemy'}
+          description={
+            isEn
+              ? 'Booking confirmation and payment summary.'
+              : 'Potwierdzenie rezerwacji i podsumowanie płatności.'
+          }
           breadcrumbs={[
             { label: dict.breadcrumbs.home, href: localePath(lang, '/') },
-            { label: 'Rezerwacja', href: localePath(lang, '/rezerwacja') },
-            { label: 'Dziękujemy' },
+            {
+              label: isEn ? 'Booking' : 'Rezerwacja',
+              href: localePath(lang, '/rezerwacja'),
+            },
+            { label: isEn ? 'Thank you' : 'Dziękujemy' },
           ]}
           dict={dict}
         />

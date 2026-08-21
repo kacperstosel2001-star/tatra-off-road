@@ -8,11 +8,20 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import { localePath } from '@/lib/i18n'
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: string; id: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}): Promise<Metadata> {
   const { lang } = await params
+  const isEn = lang === 'en'
   return {
-    title: 'Kasa — opłać zaliczkę | Tatra Off-Road',
-    description: 'Potwierdź rezerwację wyprawy quadowej przez opłacenie zaliczki.',
+    title: isEn
+      ? 'Checkout — pay deposit | Tatra Off-Road'
+      : 'Kasa — opłać zaliczkę | Tatra Off-Road',
+    description: isEn
+      ? 'Confirm your ATV tour by paying the deposit.'
+      : 'Potwierdź rezerwację wyprawy quadowej przez opłacenie zaliczki.',
     robots: { index: false, follow: false },
     alternates: {
       canonical: `https://tatraoffroad.pl/${lang}/kasa`,
@@ -20,9 +29,14 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   }
 }
 
-export default async function CheckoutPage({ params }: { params: Promise<{ lang: string; id: string }> }) {
+export default async function CheckoutPage({
+  params,
+}: {
+  params: Promise<{ lang: string; id: string }>
+}) {
   const { lang, id } = await params
-  const dict = await getDictionary((lang === 'en' ? 'en' : 'pl') as 'pl' | 'en')
+  const isEn = lang === 'en'
+  const dict = await getDictionary((isEn ? 'en' : 'pl') as 'pl' | 'en')
 
   return (
     <>
@@ -30,18 +44,31 @@ export default async function CheckoutPage({ params }: { params: Promise<{ lang:
       <Header dict={dict} lang={lang} />
       <main className="bg-paper min-h-screen">
         <PageHeader
-          title="Kasa"
-          description="Opłać zaliczkę BLIK-iem lub przelewem. Resztę zapłacisz na miejscu."
+          title={isEn ? 'Checkout' : 'Kasa'}
+          description={
+            isEn
+              ? 'Pay the deposit by BLIK or bank transfer. The rest is paid on site.'
+              : 'Opłać zaliczkę BLIK-iem lub przelewem. Resztę zapłacisz na miejscu.'
+          }
           breadcrumbs={[
             { label: dict.breadcrumbs.home, href: localePath(lang, '/') },
-            { label: 'Rezerwacja', href: localePath(lang, '/rezerwacja') },
-            { label: 'Kasa' },
+            {
+              label: isEn ? 'Booking' : 'Rezerwacja',
+              href: localePath(lang, '/rezerwacja'),
+            },
+            { label: isEn ? 'Checkout' : 'Kasa' },
           ]}
           dict={dict}
         />
         <section className="section-pad bg-snow">
           <div className="wrap">
-            <Suspense fallback={<div className="py-10 text-stone">Ładowanie kasy…</div>}>
+            <Suspense
+              fallback={
+                <div className="py-10 text-stone">
+                  {isEn ? 'Loading checkout…' : 'Ładowanie kasy…'}
+                </div>
+              }
+            >
               <CheckoutClient bookingId={id} lang={lang} />
             </Suspense>
           </div>

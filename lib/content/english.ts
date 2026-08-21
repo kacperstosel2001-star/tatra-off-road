@@ -20,7 +20,7 @@ export const EN_HERO: HeroDTO = {
   headline: 'The best',
   highlightWord: 'adventure',
   subheadline: 'off-road',
-  lead: 'Can-Am quad tours through Podhale forests and trails. Legal routes, experienced guides, 2025 fleet.',
+  lead: 'Can-Am quad tours through Podhale forests and trails. Legal routes, experienced guides, Can-Am 2025.',
   badges: ['Can-Am 2025', 'Google 5/5', 'Legal trails', 'Experienced guides'],
   stats: [
     { value: '8+', label: 'Years on the trail' },
@@ -69,7 +69,7 @@ export const EN_FEATURES: FeatureDTO[] = [
     id: '1',
     title: 'Can-Am 2025',
     description:
-      'We run a modern Can-Am fleet — power, comfort and reliability for first-timers and experienced riders alike.',
+      'We run modern Can-Am machines — power, comfort and reliability for first-timers and experienced riders alike.',
     iconName: 'star',
   },
   {
@@ -290,3 +290,91 @@ export const EN_PAGE = {
     },
   },
 } as const
+
+export const EN_FALLBACK_NEWS = [
+  {
+    id: 'fallback-1',
+    title: 'New Can-Am machines for the season',
+    slug: 'nowe-can-am-outlander-2025',
+    excerpt:
+      'This season we ride modern Can-Am ATVs. See what changed and why it’s worth a test ride.',
+    content:
+      '<p>This season we focus on quality and reliability. Our Can-Am machines offer improved handling and cooling — great for first-timers and experienced riders.</p>',
+    publishedAt: '2026-06-15T10:00:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'New Can-Am ATVs | Tatra Off-Road',
+      description: 'Modern Can-Am machines at Tatra Off-Road.',
+    },
+  },
+  {
+    id: 'fallback-2',
+    title: 'What to wear on a mountain ATV tour',
+    slug: 'jak-ubrac-sie-na-wyprawe-quadami',
+    excerpt: 'Preparation is key. Our short guide to clothing by season.',
+    content:
+      '<p>Whatever the weather, bring closed shoes with a firm sole and long trousers. We provide helmets, balaclavas and goggles.</p>',
+    publishedAt: '2026-05-20T14:30:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'What to wear on an ATV tour | Tatra Off-Road',
+      description: 'Clothing tips for ATV tours in the mountains.',
+    },
+  },
+  {
+    id: 'fallback-3',
+    title: 'Safety on the trail — what to know',
+    slug: 'bezpieczenstwo-na-szlaku',
+    excerpt: 'Helmet, briefing and group pace are the basics. Here’s how we keep every ride safe.',
+    content:
+      '<p>Before the start every rider gets protective gear and a short briefing. We only use legal trails.</p>',
+    publishedAt: '2026-07-02T09:00:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'Trail safety | Tatra Off-Road',
+      description: 'How we keep ATV tours safe.',
+    },
+  },
+  {
+    id: 'fallback-4',
+    title: 'Best Podhale routes for summer 2026',
+    slug: 'najlepsze-trasy-podhala-lato-2026',
+    excerpt: 'Forests, ridges and Tatra views — the routes guests book most in summer.',
+    content:
+      '<p>In summer you most often book forest loops near Ząb and longer rides with Tatra panoramas.</p>',
+    publishedAt: '2026-07-18T11:00:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'Best Podhale routes 2026 | Tatra Off-Road',
+      description: 'Recommended ATV routes in Podhale.',
+    },
+  },
+  {
+    id: 'fallback-5',
+    title: 'Company outing — team building on quads',
+    slug: 'wyprawa-firmowa-integracja-na-quadach',
+    excerpt: 'Looking for a memorable team day? Here’s how a Can-Am company outing works.',
+    content:
+      '<p>We organise team packages: briefing, a shared route and photos from the ride.</p>',
+    publishedAt: '2026-08-01T08:30:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'Company ATV outing | Tatra Off-Road',
+      description: 'ATV tours for companies in Podhale.',
+    },
+  },
+  {
+    id: 'fallback-6',
+    title: 'Winter season: ATVs in the snow',
+    slug: 'sezon-zimowy-quady-po-sniegu',
+    excerpt: 'In winter the trails look different. See when we ride and how to prepare.',
+    content:
+      '<p>With proper snow cover we ride selected sections with extra focus on safety.</p>',
+    publishedAt: '2026-01-12T12:00:00.000Z',
+    author: 'Tatra Off-Road Team',
+    meta: {
+      title: 'Winter ATV tours in Podhale | Tatra Off-Road',
+      description: 'Winter Can-Am tours with Tatra Off-Road.',
+    },
+  },
+] as const

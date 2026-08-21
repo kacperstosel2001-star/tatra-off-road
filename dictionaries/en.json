@@ -34,7 +34,7 @@
     "insurance": "Insurance included",
     "response": "Response time",
     "rating": "Google 5/5",
-    "newFleet": "Newest Can-Am fleet",
+    "newFleet": "Can-Am 2025 gear",
     "cancellation": "Free cancellation"
   },
   "testimonials": {
@@ -100,6 +100,14 @@
     "subheadline": "Call or fill out the form - we'll get back to you within 30 minutes to confirm the date and package.",
     "formTitle": "Booking form",
     "name": "Full name",
+    "tourDate": "Tour date",
+    "package": "Package",
+    "persons": "Number of people",
+    "package1h": "1-hour tour",
+    "package2h": "2-hour tour",
+    "packageGroup": "Group / Company",
+    "namePlaceholder": "John Smith",
+    "messagePlaceholder": "Extra details about the tour, date or group...",
     "message": "Message (optional)",
     "finePrint": "We respond by phone within 30 minutes, 8:00–20:00.",
     "infoTitle": "Contact details",
@@ -126,7 +134,7 @@
     "published": "Published",
     "sidebarEyebrow": "Book a ride",
     "sidebarTitle": "Hit the trail",
-    "sidebarDesc": "Can-Am 2025 fleet, legal Podhale trails, guide included. Deposit online, rest on site.",
+    "sidebarDesc": "Can-Am 2025, legal Podhale trails, guide included. Deposit online, rest on site.",
     "sidebarRecent": "More from the blog",
     "empty": "New posts are coming soon."
   },

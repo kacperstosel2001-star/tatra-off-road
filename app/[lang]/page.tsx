@@ -109,7 +109,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 ]
           }
         />
-        <Contact dict={dict} contactInfo={contactInfo} />
+        <Contact dict={dict} contactInfo={contactInfo} lang={lang} />
       </main>
 
       <Footer dict={dict} lang={locale} />

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { absoluteUrl } from '@/lib/i18n'
 
-const paths = ['/', '/cennik', '/flota', '/trasy', '/rezerwacja', '/about', '/contact', '/news']
+const paths = ['/', '/cennik', '/trasy', '/rezerwacja', '/about', '/contact', '/news']
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()

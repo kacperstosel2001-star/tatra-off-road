@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { localePath } from '@/lib/i18n'
 import { telHref, useContact } from '@/components/providers/ContactProvider'
+import { bookingUi } from '@/lib/content/booking-ui'
+import { translateTripName } from '@/lib/content/english'
 
 type Trip = {
   id: string | number
@@ -34,36 +36,6 @@ type Price = {
 }
 
 type StepId = 'trip' | 'party' | 'schedule' | 'details'
-
-const STEPS: { id: StepId; label: string }[] = [
-  { id: 'trip', label: 'Wyprawa' },
-  { id: 'party', label: 'Uczestnicy' },
-  { id: 'schedule', label: 'Termin' },
-  { id: 'details', label: 'Dane' },
-]
-
-const BOOKING_FAQ = [
-  {
-    q: 'Nie ma wolnego terminu online?',
-    a: 'Zadzwoń — często jesteśmy na miejscu i znajdziemy wcześniejszy start albo zwolnione miejsce, nawet jeśli online nic nie widać.',
-  },
-  {
-    q: 'Co obejmuje cena?',
-    a: 'Quad, paliwo, kask, briefing i opiekę przewodnika na trasie.',
-  },
-  {
-    q: 'Jak działa zaliczka?',
-    a: 'Online płacisz tylko zaliczkę (BLIK/przelew). Resztę dopłacasz na miejscu przed startem.',
-  },
-  {
-    q: 'Anulowanie',
-    a: 'Zmiana terminu lub anulacja minimum 24h przed startem — oddzwonimy i pomożemy.',
-  },
-  {
-    q: 'Wymagania',
-    a: 'Prawo jazdy kat. B dla kierowcy. Pasażer od 10 lat (z opiekunem). Sportowe obuwie.',
-  },
-]
 
 function sessionKey() {
   if (typeof window === 'undefined') return ''
@@ -87,21 +59,21 @@ function minDateISO() {
 }
 
 export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any }) {
+  const ui = bookingUi(lang)
+  const STEPS: { id: StepId; label: string }[] = [
+    { id: 'trip', label: ui.steps.trip },
+    { id: 'party', label: ui.steps.party },
+    { id: 'schedule', label: ui.steps.schedule },
+    { id: 'details', label: ui.steps.details },
+  ]
   const contact = useContact()
   const phoneNumber = contact.phones[0] || '+48 888 254 223'
-  const copy = dict?.booking || {
-    noSlotTitle: 'Chciałeś wcześniejszą godzinę?',
-    noSlotBody:
-      'Zadzwoń do nas — często jesteśmy na miejscu i uda się coś złapać, nawet jeśli online nie ma wolnego slotu.',
-    callUs: 'Zadzwoń do nas',
-    faqNoSlotQ: 'Nie ma wolnego terminu online?',
-    faqNoSlotA:
-      'Zadzwoń — często jesteśmy na miejscu i znajdziemy wcześniejszy start albo zwolnione miejsce, nawet jeśli online nic nie widać.',
+  const copy = {
+    noSlotTitle: dict?.booking?.noSlotTitle || ui.faq[0].q,
+    noSlotBody: dict?.booking?.noSlotBody || ui.faq[0].a,
+    callUs: dict?.booking?.callUs || (lang === 'en' ? 'Call us' : 'Zadzwoń do nas'),
   }
-  const faqItems = [
-    { q: copy.faqNoSlotQ, a: copy.faqNoSlotA },
-    ...BOOKING_FAQ.slice(1),
-  ]
+  const faqItems = ui.faq
 
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
@@ -125,7 +97,10 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
     fetch('/api/booking/trips')
       .then((r) => r.json())
       .then((data) => {
-        const list: Trip[] = data.trips || []
+        const list: Trip[] = (data.trips || []).map((trip: Trip) => ({
+          ...trip,
+          name: translateTripName(trip.name, lang === 'en' ? 'en' : 'pl'),
+        }))
         setTrips(list)
 
         try {
@@ -152,7 +127,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           if (list[0]) setTripId(String(list[0].id))
         }
       })
-      .catch(() => setError('Nie udało się załadować wypraw.'))
+      .catch(() => setError(ui.loadTripsError))
       .finally(() => setLoading(false))
   }, [])
 
@@ -217,10 +192,10 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         setTimes(slots)
         setTime((prev) => (slots.some((s: { time: string }) => s.time === prev) ? prev : ''))
         if (!slots.length) {
-          setError('Brak wolnych godzin na ten dzień przy wybranej liczbie quadow.')
+          setError(ui.noTimesDay)
         }
       })
-      .catch(() => setError('Nie udało się pobrać dostępnych godzin.'))
+      .catch(() => setError(ui.loadTimesError))
       .finally(() => setLoadingTimes(false))
   }, [tripId, date, drivers])
 
@@ -236,8 +211,8 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
   function goNext() {
     setError('')
     if (!canGoNext()) {
-      if (step === 'schedule') setError('Wybierz datę i dostępną godzinę.')
-      if (step === 'details') setError('Uzupełnij imię, nazwisko i telefon.')
+      if (step === 'schedule') setError(ui.needSchedule)
+      if (step === 'details') setError(ui.needDetails)
       return
     }
     const next = STEPS[stepIndex + 1]
@@ -257,7 +232,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
       return
     }
     if (!canGoNext()) {
-      setError('Uzupełnij imię, nazwisko i telefon.')
+      setError(ui.needDetails)
       return
     }
     setSubmitting(true)
@@ -281,7 +256,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.message || 'Nie udało się zarezerwować.')
+        setError(data.message || ui.reserveError)
         return
       }
       try {
@@ -291,7 +266,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
       }
       window.location.href = data.checkoutUrl || localePath(lang, `/kasa/${data.bookingId || data.booking?.id}`)
     } catch {
-      setError('Błąd połączenia. Spróbuj ponownie.')
+      setError(ui.connectionError)
     } finally {
       setSubmitting(false)
     }
@@ -315,30 +290,30 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           <div className="booking-mobile-summary">
             <div className="min-w-0">
               <p className="m-0 text-[11px] font-label uppercase tracking-[0.1em] text-orange">
-                Zaliczka teraz
+                {ui.depositNow}
               </p>
               <p className="m-0 font-display text-[22px] leading-none truncate">
-                {selectedTrip?.name || 'Wyprawa'}
+                {selectedTrip?.name || ui.steps.trip}
               </p>
             </div>
             <div className="text-right flex-none">
               <div className="font-display text-[28px] leading-none text-orange">{previewPrice.deposit} zł</div>
-              <div className="text-[11px] opacity-70">z {previewPrice.total} zł</div>
+              <div className="text-[11px] opacity-70">{ui.ofTotal} {previewPrice.total} zł</div>
             </div>
           </div>
         ) : null}
 
         <div className="mb-6 sm:mb-8">
-          <p className="eyebrow m-0 mb-3">Rezerwacja online</p>
+          <p className="eyebrow m-0 mb-3">{ui.onlineEyebrow}</p>
           <h1 className="font-display text-[28px] sm:text-[34px] lg:text-[44px] uppercase m-0 tracking-[0.005em] leading-[0.95]">
-            Zarezerwuj wyprawę
+            {ui.title}
           </h1>
           <p className="text-[#4a4638] text-[14.5px] sm:text-[15.5px] mt-3 mb-0 max-w-[52ch]">
-            4 krótkie kroki. Zaliczkę opłacisz bezpiecznie online — resztę na miejscu.
+            {ui.lead}
           </p>
         </div>
 
-        <nav aria-label="Postęp rezerwacji" className="booking-steps mb-6 sm:mb-8">
+        <nav aria-label={ui.title} className="booking-steps mb-6 sm:mb-8">
           {STEPS.map((s, i) => {
             const done = i < stepIndex
             const active = i === stepIndex
@@ -362,7 +337,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         {step === 'trip' && (
           <section className="grid gap-3" aria-labelledby="step-trip">
             <h2 id="step-trip" className="font-label text-[13px] uppercase tracking-[0.1em] font-bold m-0 mb-1">
-              Wybierz wyprawę
+              {ui.chooseTrip}
             </h2>
             {trips.map((trip) => {
               const active = String(trip.id) === String(tripId)
@@ -383,7 +358,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                           <Clock size={14} className="text-orange" /> {trip.durationHours} h
                         </span>
                         <span className="inline-flex items-center gap-1.5">
-                          <Users size={14} className="text-orange" /> do 4 quadow
+                          <Users size={14} className="text-orange" /> {ui.upToQuads}
                         </span>
                       </div>
                       {trip.description ? (
@@ -392,7 +367,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                     </div>
                     <div className="text-left sm:text-right flex-none">
                       <div className="font-mono text-[18px] font-semibold">{trip.price1} zł</div>
-                      <div className="text-[11px] uppercase tracking-[0.08em] text-stone">od / 1 os.</div>
+                      <div className="text-[11px] uppercase tracking-[0.08em] text-stone">{ui.fromPerPerson}</div>
                     </div>
                   </div>
                 </button>
@@ -404,15 +379,15 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         {step === 'party' && (
           <section aria-labelledby="step-party" className="grid gap-6">
             <h2 id="step-party" className="font-label text-[13px] uppercase tracking-[0.1em] font-bold m-0">
-              Ilu jedziecie?
+              {ui.howMany}
             </h2>
             <p className="m-0 text-[14.5px] text-[#4a4638] -mt-3">
-              1 kierowca = 1 quad. Pasażer jedzie z Tyłem (cena 2 os. na quadzie).
+              {ui.howManyHint}
             </p>
 
             <div>
               <div className="font-label text-[12px] uppercase tracking-[0.08em] font-bold mb-3">
-                Kierowcy (quady)
+                {ui.drivers}
               </div>
               <div className="flex flex-wrap gap-2">
                 {[1, 2, 3, 4].map((n) => (
@@ -433,7 +408,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
 
             <div>
               <div className="font-label text-[12px] uppercase tracking-[0.08em] font-bold mb-3">
-                Pasażerowie (0–{drivers})
+                {ui.passengers} (0–{drivers})
               </div>
               <div className="flex flex-wrap gap-2">
                 {Array.from({ length: drivers + 1 }, (_, n) => n).map((n) => (
@@ -461,14 +436,14 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         {step === 'schedule' && (
           <section aria-labelledby="step-schedule" className="grid gap-5">
             <h2 id="step-schedule" className="font-label text-[13px] uppercase tracking-[0.1em] font-bold m-0">
-              Wybierz termin
+              {ui.chooseDate}
             </h2>
             <p className="m-0 text-[14.5px] text-[#4a4638] -mt-2">
-              Godziny uwzględniają zajętość z Google Calendar i wolne quady.
+              {ui.scheduleHint}
             </p>
 
             <label className="flex flex-col gap-1.5">
-              <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Data</span>
+              <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.date}</span>
               <input
                 type="date"
                 min={minDateISO()}
@@ -481,18 +456,18 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
 
             <div>
               <div className="font-label text-[12px] uppercase tracking-[0.08em] font-bold mb-3">
-                Godzina startu
+                {ui.startTime}
               </div>
               {!date ? (
-                <div className="booking-empty">Najpierw wybierz datę — pokażemy wolne godziny.</div>
+                <div className="booking-empty">{ui.pickDateFirst}</div>
               ) : loadingTimes ? (
                 <div className="booking-empty inline-flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={16} /> Sprawdzamy dostępność…
+                  <Loader2 className="animate-spin" size={16} /> {ui.checking}
                 </div>
               ) : times.length === 0 ? (
                 <div className="booking-empty grid gap-3">
                   <span>
-                    Brak wolnych godzin tego dnia. Wybierz inną datę albo zmniejsz liczbę quadow.
+                    {ui.noTimes}
                   </span>
                   <a
                     href={telHref(phoneNumber)}
@@ -512,7 +487,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                     >
                       <strong className="font-display text-[22px] leading-none">{slot.time}</strong>
                       <span className="text-[11px] uppercase tracking-[0.06em] text-stone mt-1">
-                        wolne: {slot.availableQuads}
+                        {ui.freeQuads}: {slot.availableQuads}
                       </span>
                     </button>
                   ))}
@@ -538,25 +513,25 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         {step === 'details' && (
           <section aria-labelledby="step-details" className="grid gap-5">
             <h2 id="step-details" className="font-label text-[13px] uppercase tracking-[0.1em] font-bold m-0">
-              Dane rezerwującego
+              {ui.detailsTitle}
             </h2>
             <p className="m-0 text-[14.5px] text-[#4a4638] -mt-2">
-              Potwierdzenie i kontakt w sprawie wyprawy.
+              {ui.detailsHint}
             </p>
 
             <div className="bg-ink text-snow p-4 grid gap-2 text-[14px]">
               <div className="flex justify-between gap-3">
-                <span className="opacity-70">Wyprawa</span>
+                <span className="opacity-70">{ui.tripLabel}</span>
                 <strong className="text-right">{selectedTrip?.name}</strong>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="opacity-70">Termin</span>
+                <span className="opacity-70">{ui.dateLabel}</span>
                 <strong>
                   {date} · {time}
                 </strong>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="opacity-70">Uczestnicy</span>
+                <span className="opacity-70">{ui.peopleLabel}</span>
                 <strong>
                   {drivers} kier. / {passengers} pas.
                 </strong>
@@ -565,7 +540,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Imię</span>
+                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.firstName}</span>
                 <input
                   className="booking-input"
                   value={firstName}
@@ -575,7 +550,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Nazwisko</span>
+                <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.lastName}</span>
                 <input
                   className="booking-input"
                   value={lastName}
@@ -586,7 +561,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
               </label>
             </div>
             <label className="flex flex-col gap-1.5">
-              <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">Telefon</span>
+              <span className="font-label text-[12px] uppercase tracking-[0.08em] font-bold">{ui.phone}</span>
               <input
                 className="booking-input"
                 value={phone}
@@ -605,7 +580,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
         <div className="booking-actions">
           {stepIndex > 0 ? (
             <button type="button" className="btn btn-ghost" onClick={goBack}>
-              <ArrowLeft size={16} /> Wstecz
+              <ArrowLeft size={16} /> {ui.back}
             </button>
           ) : null}
 
@@ -616,13 +591,13 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
               onClick={goNext}
               disabled={!canGoNext()}
             >
-              Dalej <ArrowRight size={16} />
+              {ui.next} <ArrowRight size={16} />
             </button>
           ) : (
             <button type="submit" className="btn btn-primary ml-auto" disabled={submitting || !canGoNext()}>
               {submitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-              <span className="sm:hidden">Do płatności</span>
-              <span className="hidden sm:inline">Przejdź do płatności</span>
+              <span className="sm:hidden">{ui.toPaymentShort}</span>
+              <span className="hidden sm:inline">{ui.toPayment}</span>
               <ArrowRight size={16} />
             </button>
           )}
@@ -634,7 +609,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           <div className="flex items-center gap-2 mb-4">
             <Info size={16} className="text-orange" />
             <h3 className="font-label text-[12px] uppercase tracking-[0.1em] font-bold m-0">
-              Warto wiedzieć
+              {ui.worthKnowing}
             </h3>
           </div>
           <div className="grid gap-2">
@@ -661,19 +636,19 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
       <aside className="booking-aside hidden xl:block xl:sticky xl:top-[calc(var(--site-header)+var(--site-tread)+1rem)]">
         <div className="bg-ink text-snow p-6 lg:p-7">
           <p className="font-label text-[11px] uppercase tracking-[0.12em] text-orange m-0 mb-3">
-            Podsumowanie
+            {ui.summary}
           </p>
           <h2 className="font-display text-[28px] uppercase m-0 mb-5 leading-none">
-            {selectedTrip?.name || 'Wybierz wyprawę'}
+            {selectedTrip?.name || ui.pickTrip}
           </h2>
 
           <ul className="m-0 p-0 list-none grid gap-3 text-[14px] opacity-90 mb-6">
             <li className="flex justify-between gap-3 border-b border-[rgba(245,241,231,0.12)] pb-3">
-              <span className="opacity-60">Czas</span>
+              <span className="opacity-60">{ui.duration}</span>
               <strong>{selectedTrip ? `${selectedTrip.durationHours} h` : '—'}</strong>
             </li>
             <li className="flex justify-between gap-3 border-b border-[rgba(245,241,231,0.12)] pb-3">
-              <span className="opacity-60">Quady / pasażerowie</span>
+              <span className="opacity-60">{ui.quadsPassengers}</span>
               <strong>
                 {drivers} / {passengers}
               </strong>
@@ -689,15 +664,15 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           {previewPrice ? (
             <div className="grid gap-2 mb-2">
               <div className="flex justify-between items-baseline">
-                <span className="text-[13px] opacity-60 uppercase tracking-[0.08em]">Razem</span>
+                <span className="text-[13px] opacity-60 uppercase tracking-[0.08em]">{ui.total}</span>
                 <span className="font-display text-[36px] leading-none">{previewPrice.total} zł</span>
               </div>
               <div className="flex justify-between text-[14px]">
-                <span className="text-orange">Zaliczka teraz</span>
+                <span className="text-orange">{ui.depositNow}</span>
                 <strong>{previewPrice.deposit} zł</strong>
               </div>
               <div className="flex justify-between text-[14px] opacity-80">
-                <span>Na miejscu</span>
+                <span>{ui.onSite}</span>
                 <strong>{previewPrice.remaining} zł</strong>
               </div>
             </div>
@@ -706,15 +681,15 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           <div className="mt-6 pt-5 border-t border-[rgba(245,241,231,0.12)] grid gap-3 text-[13px] opacity-85">
             <div className="flex gap-2 items-start">
               <ShieldCheck size={16} className="text-orange flex-none mt-0.5" />
-              Bezpieczna płatność CashBill (BLIK / przelew)
+              {ui.paySafe}
             </div>
             <div className="flex gap-2 items-start">
               <HardHat size={16} className="text-orange flex-none mt-0.5" />
-              Kask, briefing i przewodnik w cenie
+              {ui.gearIncluded}
             </div>
             <div className="flex gap-2 items-start">
               <MapPin size={16} className="text-orange flex-none mt-0.5" />
-              Start: okolice Nowego Targu / Podhale
+              {ui.startPlace}
             </div>
           </div>
         </div>
@@ -723,7 +698,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
           <div className="flex items-center gap-2 mb-4">
             <Info size={16} className="text-orange" />
             <h3 className="font-label text-[12px] uppercase tracking-[0.1em] font-bold m-0">
-              Warto wiedzieć
+              {ui.worthKnowing}
             </h3>
           </div>
           <div className="grid gap-2">

@@ -16,19 +16,28 @@ export function GoogleMapEmbed({
   address,
   className = '',
   title = 'Mapa dojazdu — Tatra Off-Road',
+  openLabel = 'Otwórz w Google Maps',
+  lang,
 }: {
   address?: string | null
   className?: string
   title?: string
+  openLabel?: string
+  lang?: string
 }) {
   const resolved = (address || DEFAULT_ADDRESS).trim() || DEFAULT_ADDRESS
   const embed = googleMapsEmbedUrl(resolved)
   const open = googleMapsSearchUrl(resolved)
+  const label = openLabel || (lang === 'en' ? 'Open in Google Maps' : 'Otwórz w Google Maps')
+  const mapTitle =
+    title === 'Mapa dojazdu — Tatra Off-Road' && lang === 'en'
+      ? 'Directions map — Tatra Off-Road'
+      : title
 
   return (
     <div className={`relative overflow-hidden border border-stone-line bg-paper ${className}`}>
       <iframe
-        title={title}
+        title={mapTitle}
         src={embed}
         className="absolute inset-0 h-full w-full border-0 grayscale-[0.15] contrast-[1.02]"
         loading="lazy"
@@ -41,7 +50,7 @@ export function GoogleMapEmbed({
         rel="noopener noreferrer"
         className="absolute bottom-3 right-3 z-2 bg-ink text-snow font-label text-[11px] uppercase tracking-[0.1em] font-bold px-3 py-2 hover:bg-orange hover:text-ink transition-colors"
       >
-        Otwórz w Google Maps
+        {label}
       </a>
     </div>
   )

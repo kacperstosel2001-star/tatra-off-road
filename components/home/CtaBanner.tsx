@@ -63,7 +63,9 @@ export function CtaBanner({
                 <Phone className="w-[18px] h-[18px] fill-current" />
               </div>
               <div>
-                <b className="block font-label uppercase tracking-[0.06em] text-[13px] text-snow">Telefon</b>
+                <b className="block font-label uppercase tracking-[0.06em] text-[13px] text-snow">
+                  {dict.contact.phone}
+                </b>
                 <span className="text-[13px] text-stone">{phone}</span>
               </div>
             </div>
@@ -85,7 +87,9 @@ export function CtaBanner({
                 <MapPin className="w-[18px] h-[18px] fill-current" />
               </div>
               <div>
-                <b className="block font-label uppercase tracking-[0.06em] text-[13px] text-snow">Adres</b>
+                <b className="block font-label uppercase tracking-[0.06em] text-[13px] text-snow">
+                  {dict.contact.address}
+                </b>
                 <span className="text-[13px] text-stone">{contactInfo.address}</span>
               </div>
             </div>

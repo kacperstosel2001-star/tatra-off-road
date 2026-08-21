@@ -4,6 +4,7 @@ import {
   EN_CTA,
   EN_FAQ,
   EN_FEATURES,
+  EN_FALLBACK_NEWS,
   EN_HERO,
   EN_MARQUEE,
   EN_META,
@@ -631,6 +632,12 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getNews(locale?: Locale): Promise<NewsDTO[]> {
+    if (loc(locale) === 'en') {
+      return EN_FALLBACK_NEWS.map((item, i) => ({
+        ...item,
+        image: FALLBACK_NEWS[i]?.image || SITE_PHOTO['01'],
+      }))
+    }
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -652,6 +659,15 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getNewsBySlug(slug: string, locale?: Locale): Promise<NewsDTO | null> {
+    if (loc(locale) === 'en') {
+      const item = EN_FALLBACK_NEWS.find((n) => n.slug === slug)
+      if (!item) return null
+      const idx = EN_FALLBACK_NEWS.findIndex((n) => n.slug === slug)
+      return {
+        ...item,
+        image: FALLBACK_NEWS[idx]?.image || SITE_PHOTO['01'],
+      }
+    }
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({
@@ -687,6 +703,8 @@ export class PayloadContentService implements ContentRepository {
   }
 
   async getContactInfo(locale?: Locale): Promise<ContactInfoDTO> {
+    const hoursEn = 'Tours daily, 8:00–20:00, after booking'
+    const hoursPl = 'Wyprawy codziennie, 8:00–20:00, po rezerwacji'
     try {
       const payload = await getPayloadClient()
       const settings = await payload.findGlobal({
@@ -697,11 +715,16 @@ export class PayloadContentService implements ContentRepository {
       const s = settings as any
       if (s.address || s.email || s.phones?.length) {
         const phones = (s.phones || []).map((p: any) => p.number).filter(Boolean)
+        const hoursRaw = s.hours || ''
+        const hours =
+          loc(locale) === 'en'
+            ? hoursEn
+            : hoursRaw || hoursPl
         return {
           address: s.address || '',
           phones,
           email: s.email || '',
-          hours: s.hours || '',
+          hours,
           whatsapp: s.whatsapp || phones[0] || '',
         }
       }
@@ -712,7 +735,7 @@ export class PayloadContentService implements ContentRepository {
       address: 'Ul. Świętej Anny 39, 34-521 Ząb',
       phones: ['+48 888 254 223', '+48 530 198 735'],
       email: 'tatraoffroad@gmail.com',
-      hours: 'Wyprawy codziennie, 8:00–20:00, po rezerwacji',
+      hours: loc(locale) === 'en' ? hoursEn : hoursPl,
       whatsapp: '+48 888 254 223',
     }
   }

@@ -52,7 +52,7 @@ export default async function ContactPage({ params }: { params: Promise<{ lang: 
           dict={dict}
         />
         <div className="pb-24">
-          <Contact dict={dict} contactInfo={contactInfo} />
+          <Contact dict={dict} contactInfo={contactInfo} lang={lang} />
         </div>
       </main>
 
