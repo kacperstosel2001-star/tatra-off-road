@@ -147,7 +147,7 @@ export const BookingSettings: GlobalConfig = {
           label: 'Service Account JSON',
           admin: {
             description:
-              'Cały plik JSON klucza konta serwisowego. Po zaliczce rezerwacja idzie do kalendarza. Wydarzenia już w kalendarzu blokują wolne godziny na stronie (ręczny wpis = pełna blokada; w tytule „3 quady” = 3 zajęte).',
+              'Cały plik JSON klucza. Tytuł wydarzenia np.: REZERWACJA QUAD | 2026-08-23 | 09:00-10:00 | 1 quad 2 osoby 50 zadatku 250 dopłaty | Imię Nazwisko — system czyta quady, osoby, zadatek i dopłatę. „Synchronizuj” importuje do panelu; przy wolnych godzinach dociąga też bieżący dzień.',
           },
         },
         {

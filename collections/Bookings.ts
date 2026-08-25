@@ -157,6 +157,7 @@ export const Bookings: CollectionConfig = {
             { label: 'Strona WWW', value: 'website' },
             { label: 'Admin (ręczne)', value: 'manual_admin' },
             { label: 'Telefon', value: 'phone' },
+            { label: 'Google Calendar', value: 'google_calendar' },
           ],
           admin: { width: '50%' },
         },

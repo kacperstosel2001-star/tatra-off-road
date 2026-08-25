@@ -212,19 +212,25 @@ async function loadDayBusyIntervals(
   const payload = await getPayloadClient()
   const settings = await getBookingSettings()
 
+  // Jedno odczytanie GCal: import do panelu + zajętość (bez podwójnego fetcha)
   let gcalOk = false
   let gcalIntervals: { start: number; end: number; drivers: number }[] = []
   try {
-    const { listGoogleCalendarBusyIntervals } = await import('@/lib/gcal/client')
-    const gcal = await listGoogleCalendarBusyIntervals(date, settings.totalQuads)
-    gcalOk = gcal.ok
-    gcalIntervals = gcal.intervals.map((item) => ({
+    const { syncGoogleCalendarDay } = await import('@/lib/gcal/sync')
+    const synced = await syncGoogleCalendarDay(date)
+    gcalOk = synced.ok
+    gcalIntervals = synced.intervals.map((item) => ({
       start: item.start,
       end: item.end,
       drivers: item.drivers,
     }))
+    if (synced.configured && !synced.ok) {
+      console.error(
+        'GCal configured but list failed — availability uses DB only until calendar works again',
+      )
+    }
   } catch (error) {
-    console.error('GCal busy intervals', error)
+    console.error('GCal day sync', error)
   }
 
   const result = await payload.find({

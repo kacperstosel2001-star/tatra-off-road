@@ -156,11 +156,26 @@ function buildEventBody(booking: Booking) {
         ? 'Telefon'
         : 'Rezerwacja online'
 
+  const people = drivers + passengers
+  const deposit = Number(booking.depositAmount || 0)
+  const remaining = Number(booking.remainingAmount || Math.max(0, Number(booking.fullPrice || 0) - deposit))
+  const peopleWord =
+    people === 1 ? 'osoba' : people >= 2 && people <= 4 ? 'osoby' : people > 4 ? 'osób' : ''
+  const quadWord = drivers === 1 ? 'quad' : 'quady'
+  const details = [
+    `${drivers} ${quadWord}`,
+    people > 0 && peopleWord ? `${people} ${peopleWord}` : null,
+    deposit > 0 ? `${deposit} zadatku` : null,
+    remaining > 0 ? `${remaining} dopłaty` : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   const summary = [
     'REZERWACJA QUAD',
     date,
     `${startTime}-${endTime}`,
-    `${drivers} quady`,
+    details || `${drivers} ${quadWord}`,
     fullName !== '—' ? fullName : null,
   ]
     .filter(Boolean)
@@ -217,9 +232,32 @@ export type GcalBusyInterval = {
   source: 'gcal'
 }
 
+export type ParsedGcalEvent = {
+  id: string
+  summary: string
+  description: string
+  cancelled: boolean
+  allDay: boolean
+  /** Czy importować do panelu (start tego dnia / całodniowe). Busy intervals biorą wszystkie. */
+  importable: boolean
+  date: string
+  startMin: number
+  endMin: number
+  startTime: string
+  endTime: string
+  drivers: number
+  passengers: number
+  depositAmount?: number
+  remainingAmount?: number
+  bookingId?: string
+  customerName?: string
+  phone?: string
+}
+
 type CalendarEvent = {
   id?: string
   summary?: string
+  description?: string
   status?: string
   start?: { dateTime?: string; date?: string; timeZone?: string }
   end?: { dateTime?: string; date?: string; timeZone?: string }
@@ -247,16 +285,286 @@ function formatInWarsaw(date: Date) {
   }
 }
 
-function parseDriversFromEvent(event: CalendarEvent, totalQuads: number): number {
-  const fromProps = Number(event.extendedProperties?.private?.quad_quads || 0)
-  if (fromProps > 0) return Math.min(totalQuads, fromProps)
+function minutesToHhMm(minutes: number): string {
+  const clamped = Math.max(0, Math.min(24 * 60, minutes))
+  const h = Math.floor(clamped / 60)
+  const m = clamped % 60
+  if (h >= 24) return '23:59'
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
 
+/**
+ * Format tytułu (Wasze ręczne wpisy i nowe z systemu):
+ * REZERWACJA QUAD | 2026-08-23 | 09:00-10:00 | 1 quad 2 osoby 50 zadatku 250 dopłaty | Joanna Skaletz
+ */
+function parseSummaryDetails(
+  summary: string,
+  totalQuads: number,
+  privateProps: Record<string, string>,
+): {
+  drivers: number
+  passengers: number
+  depositAmount?: number
+  remainingAmount?: number
+  customerName?: string
+  phone?: string
+} {
+  const fromPropsDrivers = Number(privateProps.quad_quads || 0)
+  const fromPropsPassengers = Number(privateProps.quad_passengers || 0)
+  const phone = privateProps.quad_phone || undefined
+
+  const parts = summary.split('|').map((p) => p.trim()).filter(Boolean)
+  const detailsPart =
+    parts.find((p) => /\d+\s*quad/i.test(p)) ||
+    parts[3] ||
+    summary
+
+  let drivers = fromPropsDrivers > 0 ? fromPropsDrivers : 0
+  if (!drivers) {
+    const quadMatch = detailsPart.match(/(\d+)\s*quad/i)
+    if (quadMatch) drivers = Number(quadMatch[1])
+  }
+  if (!drivers) drivers = totalQuads
+  drivers = Math.min(totalQuads, Math.max(1, drivers))
+
+  let passengers = fromPropsPassengers > 0 ? fromPropsPassengers : 0
+  if (!passengers) {
+    // „2 osoby” = łącznie osób na wyprawie → pasażerowie = osoby − quady
+    const peopleMatch = detailsPart.match(/(\d+)\s*osob/i)
+    if (peopleMatch) {
+      const people = Number(peopleMatch[1])
+      passengers = Math.max(0, people - drivers)
+    }
+  }
+
+  const depositMatch = detailsPart.match(/(\d+(?:[.,]\d+)?)\s*zadat/i)
+  const remainingMatch = detailsPart.match(/(\d+(?:[.,]\d+)?)\s*dopłat/i)
+  const depositAmount = depositMatch
+    ? Number(String(depositMatch[1]).replace(',', '.'))
+    : undefined
+  const remainingAmount = remainingMatch
+    ? Number(String(remainingMatch[1]).replace(',', '.'))
+    : undefined
+
+  let customerName: string | undefined
+  if (parts.length >= 5) {
+    const name = parts[parts.length - 1]
+    if (
+      name &&
+      !/^\d+\s*quad/i.test(name) &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(name) &&
+      !/^\d{1,2}:\d{2}/.test(name)
+    ) {
+      customerName = name
+    }
+  }
+
+  return {
+    drivers,
+    passengers,
+    depositAmount,
+    remainingAmount,
+    customerName,
+    phone,
+  }
+}
+
+function parseEventForDate(
+  event: CalendarEvent,
+  date: string,
+  totalQuads: number,
+): ParsedGcalEvent | null {
+  if (!event.id) return null
+  const cancelled = event.status === 'cancelled'
+  const privateProps = event.extendedProperties?.private || {}
+  const bookingId = privateProps.quad_booking_id || undefined
   const summary = String(event.summary || '')
-  const match = summary.match(/(\d+)\s*quad/i)
-  if (match) return Math.min(totalQuads, Math.max(1, Number(match[1])))
+  const description = String(event.description || '')
+  const parsed = parseSummaryDetails(summary, totalQuads, privateProps)
+  const drivers = parsed.drivers
+  const passengers = parsed.passengers
+  const phone = parsed.phone
+  const customerName = parsed.customerName
 
-  // Ręczne wydarzenia w kalendarzu = pełna blokada puli
-  return totalQuads
+  // Całodniowe
+  if (event.start?.date && event.end?.date) {
+    if (!(event.start.date <= date && event.end.date > date)) return null
+    return {
+      id: event.id,
+      summary,
+      description,
+      cancelled,
+      allDay: true,
+      importable: event.start.date === date,
+      date,
+      startMin: 0,
+      endMin: 24 * 60,
+      startTime: '08:00',
+      endTime: '20:00',
+      drivers,
+      passengers,
+      depositAmount: parsed.depositAmount,
+      remainingAmount: parsed.remainingAmount,
+      bookingId,
+      customerName,
+      phone,
+    }
+  }
+
+  if (!event.start?.dateTime || !event.end?.dateTime) return null
+
+  const startAt = new Date(event.start.dateTime)
+  const endAt = new Date(event.end.dateTime)
+  if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) return null
+
+  const startLocal = formatInWarsaw(startAt)
+  const endLocal = formatInWarsaw(endAt)
+
+  let startMin = 0
+  let endMin = 24 * 60
+
+  if (startLocal.date === date) startMin = startLocal.minutes
+  else if (startLocal.date > date) return null
+
+  if (endLocal.date === date) endMin = endLocal.minutes
+  else if (endLocal.date < date) return null
+
+  if (endMin <= startMin) return null
+
+  return {
+    id: event.id,
+    summary,
+    description,
+    cancelled,
+    allDay: false,
+    importable: startLocal.date === date,
+    date: startLocal.date === date ? date : startLocal.date,
+    startMin,
+    endMin,
+    startTime: minutesToHhMm(startLocal.date === date ? startMin : 8 * 60),
+    endTime: minutesToHhMm(Math.min(endMin, 24 * 60 - 1)),
+    drivers,
+    passengers,
+    depositAmount: parsed.depositAmount,
+    remainingAmount: parsed.remainingAmount,
+    bookingId,
+    customerName,
+    phone,
+  }
+}
+
+async function fetchCalendarEventsInRange(
+  timeMin: string,
+  timeMax: string,
+): Promise<{ configured: boolean; ok: boolean; items: CalendarEvent[] }> {
+  const cfg = await getGcalConfig()
+  if (!cfg) return { configured: false, ok: false, items: [] }
+
+  const token = await getAccessToken(cfg.credentials)
+  if (!token) return { configured: true, ok: false, items: [] }
+
+  const items: CalendarEvent[] = []
+  let pageToken = ''
+
+  do {
+    const params = new URLSearchParams({
+      timeMin,
+      timeMax,
+      singleEvents: 'true',
+      orderBy: 'startTime',
+      maxResults: '250',
+    })
+    if (pageToken) params.set('pageToken', pageToken)
+
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}/events?${params}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+
+    const data = (await res.json()) as {
+      items?: CalendarEvent[]
+      nextPageToken?: string
+      error?: { message?: string }
+    }
+
+    if (!res.ok) {
+      console.error('GCal list events failed', res.status, data)
+      return { configured: true, ok: false, items: [] }
+    }
+
+    items.push(...(data.items || []))
+    pageToken = data.nextPageToken || ''
+  } while (pageToken)
+
+  return { configured: true, ok: true, items }
+}
+
+async function fetchCalendarEvents(date: string): Promise<{
+  configured: boolean
+  ok: boolean
+  items: CalendarEvent[]
+}> {
+  const paddedMin = new Date(`${date}T00:00:00Z`)
+  paddedMin.setUTCHours(paddedMin.getUTCHours() - 14)
+  const paddedMax = new Date(`${date}T00:00:00Z`)
+  paddedMax.setUTCHours(paddedMax.getUTCHours() + 38)
+  return fetchCalendarEventsInRange(paddedMin.toISOString(), paddedMax.toISOString())
+}
+
+/**
+ * Wszystkie wydarzenia w zakresie dat (do masowej synchronizacji panelu).
+ */
+export async function listGoogleCalendarEventsInRange(
+  fromDate: string,
+  toDate: string,
+  totalQuads: number,
+): Promise<{ configured: boolean; ok: boolean; events: ParsedGcalEvent[] }> {
+  const paddedMin = new Date(`${fromDate}T00:00:00Z`)
+  paddedMin.setUTCHours(paddedMin.getUTCHours() - 14)
+  const paddedMax = new Date(`${toDate}T00:00:00Z`)
+  paddedMax.setUTCHours(paddedMax.getUTCHours() + 38)
+
+  const fetched = await fetchCalendarEventsInRange(paddedMin.toISOString(), paddedMax.toISOString())
+  if (!fetched.ok) return { configured: fetched.configured, ok: false, events: [] }
+
+  const events: ParsedGcalEvent[] = []
+  const seen = new Set<string>()
+
+  // Iteruj każdy dzień zakresu tylko po stronie parsowania startów
+  const start = new Date(`${fromDate}T12:00:00Z`)
+  const end = new Date(`${toDate}T12:00:00Z`)
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const date = d.toISOString().slice(0, 10)
+    for (const item of fetched.items) {
+      const parsed = parseEventForDate(item, date, totalQuads)
+      if (!parsed || parsed.cancelled || !parsed.importable) continue
+      if (seen.has(parsed.id)) continue
+      seen.add(parsed.id)
+      events.push(parsed)
+    }
+  }
+
+  return { configured: true, ok: true, events }
+}
+
+/**
+ * Wydarzenia z Google Calendar na dany dzień (Europe/Warsaw) — do zajętości i importu do panelu.
+ */
+export async function listGoogleCalendarDayEvents(
+  date: string,
+  totalQuads: number,
+): Promise<{ configured: boolean; ok: boolean; events: ParsedGcalEvent[] }> {
+  const fetched = await fetchCalendarEvents(date)
+  if (!fetched.ok) return { configured: fetched.configured, ok: false, events: [] }
+
+  const events: ParsedGcalEvent[] = []
+  for (const item of fetched.items) {
+    const parsed = parseEventForDate(item, date, totalQuads)
+    if (!parsed || parsed.cancelled) continue
+    events.push(parsed)
+  }
+
+  return { configured: true, ok: true, events }
 }
 
 /**
@@ -267,89 +575,18 @@ export async function listGoogleCalendarBusyIntervals(
   date: string,
   totalQuads: number,
 ): Promise<{ configured: boolean; ok: boolean; intervals: GcalBusyInterval[] }> {
-  const cfg = await getGcalConfig()
-  if (!cfg) return { configured: false, ok: false, intervals: [] }
+  const listed = await listGoogleCalendarDayEvents(date, totalQuads)
+  if (!listed.ok) return { configured: listed.configured, ok: false, intervals: [] }
 
-  const token = await getAccessToken(cfg.credentials)
-  if (!token) return { configured: true, ok: false, intervals: [] }
+  const intervals: GcalBusyInterval[] = listed.events.map((event) => ({
+    start: event.startMin,
+    end: event.endMin,
+    drivers: event.drivers,
+    bookingId: event.bookingId,
+    source: 'gcal' as const,
+  }))
 
-  // Szeroki zakres UTC + filtr lokalnej daty Europe/Warsaw (obsługa DST)
-  const paddedMin = new Date(`${date}T00:00:00Z`)
-  paddedMin.setUTCHours(paddedMin.getUTCHours() - 14)
-  const paddedMax = new Date(`${date}T00:00:00Z`)
-  paddedMax.setUTCHours(paddedMax.getUTCHours() + 38)
-
-  const params = new URLSearchParams({
-    timeMin: paddedMin.toISOString(),
-    timeMax: paddedMax.toISOString(),
-    singleEvents: 'true',
-    orderBy: 'startTime',
-    maxResults: '250',
-  })
-
-  const res = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}/events?${params}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-
-  const data = (await res.json()) as {
-    items?: CalendarEvent[]
-    error?: { message?: string }
-  }
-
-  if (!res.ok) {
-    console.error('GCal list events failed', res.status, data)
-    return { configured: true, ok: false, intervals: [] }
-  }
-
-  const intervals: GcalBusyInterval[] = []
-  for (const event of data.items || []) {
-    if (event.status === 'cancelled') continue
-
-    const privateProps = event.extendedProperties?.private || {}
-    const bookingId = privateProps.quad_booking_id || undefined
-    const drivers = parseDriversFromEvent(event, totalQuads)
-
-    // Całodniowe
-    if (event.start?.date && event.end?.date) {
-      if (event.start.date <= date && event.end.date > date) {
-        intervals.push({ start: 0, end: 24 * 60, drivers, bookingId, source: 'gcal' })
-      }
-      continue
-    }
-
-    if (!event.start?.dateTime || !event.end?.dateTime) continue
-
-    const startAt = new Date(event.start.dateTime)
-    const endAt = new Date(event.end.dateTime)
-    if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) continue
-
-    const startLocal = formatInWarsaw(startAt)
-    const endLocal = formatInWarsaw(endAt)
-
-    let startMin = 0
-    let endMin = 24 * 60
-
-    if (startLocal.date === date) startMin = startLocal.minutes
-    else if (startLocal.date > date) continue
-    // start wcześniej niż ten dzień → od 00:00
-
-    if (endLocal.date === date) endMin = endLocal.minutes
-    else if (endLocal.date < date) continue
-    // end później niż ten dzień → do 24:00
-
-    if (endMin <= startMin) continue
-
-    intervals.push({
-      start: startMin,
-      end: endMin,
-      drivers,
-      bookingId,
-      source: 'gcal',
-    })
-  }
-
-  return { configured: true, ok: true, intervals }
+  return { configured: listed.configured, ok: true, intervals }
 }
 
 export async function upsertBookingGoogleEvent(booking: Booking): Promise<string> {

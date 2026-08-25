@@ -50,7 +50,7 @@ export interface Booking {
   customerPhone: string
   customerEmail?: string | null
   customerNotes?: string | null
-  source: 'website' | 'manual_admin' | 'phone'
+  source: 'website' | 'manual_admin' | 'phone' | 'google_calendar'
   status: 'pending' | 'confirmed' | 'cancelled' | 'expired' | 'deposit_paid'
   fullPrice?: number | null
   depositAmount?: number | null

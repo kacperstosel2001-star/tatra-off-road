@@ -9,11 +9,12 @@ type TestResult = {
 }
 
 export function GcalTestButton() {
-  const [loading, setLoading] = useState(false)
+  const [loadingTest, setLoadingTest] = useState(false)
+  const [loadingSync, setLoadingSync] = useState(false)
   const [result, setResult] = useState<TestResult | null>(null)
 
   const onTest = async () => {
-    setLoading(true)
+    setLoadingTest(true)
     setResult(null)
     try {
       const res = await fetch('/api/admin/gcal-test', {
@@ -32,19 +33,52 @@ export function GcalTestButton() {
         message: error instanceof Error ? error.message : 'Nie udało się wywołać testu',
       })
     } finally {
-      setLoading(false)
+      setLoadingTest(false)
     }
   }
+
+  const onSync = async () => {
+    setLoadingSync(true)
+    setResult(null)
+    try {
+      const res = await fetch('/api/admin/gcal-sync', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ daysBack: 30, daysForward: 90 }),
+      })
+      const data = (await res.json()) as TestResult
+      setResult({
+        ok: Boolean(data.ok),
+        message: data.message || (data.ok ? 'Synchronizacja OK' : 'Błąd synchronizacji'),
+      })
+    } catch (error) {
+      setResult({
+        ok: false,
+        message: error instanceof Error ? error.message : 'Nie udało się wywołać synchronizacji',
+      })
+    } finally {
+      setLoadingSync(false)
+    }
+  }
+
+  const busy = loadingTest || loadingSync
 
   return (
     <div style={{ marginTop: 8, marginBottom: 16 }}>
       <p style={{ marginBottom: 10, opacity: 0.8, fontSize: 13 }}>
-        Zapisz ustawienia (Calendar ID + JSON), potem sprawdź połączenie. Konto serwisowe musi mieć
-        dostęp do kalendarza.
+        Zapisz ustawienia (Calendar ID + JSON), przetestuj połączenie, potem zsynchronizuj
+        wcześniejsze wydarzenia z Google do listy Rezerwacje. Synchronizacja blokuje też wolne
+        godziny na stronie (ręczny wpis = pełna pula; w tytule „3 quady” = 3 zajęte).
       </p>
-      <Button type="button" buttonStyle="secondary" disabled={loading} onClick={onTest}>
-        {loading ? 'Testuję…' : 'Test połączenia z Google Calendar'}
-      </Button>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <Button type="button" buttonStyle="secondary" disabled={busy} onClick={onTest}>
+          {loadingTest ? 'Testuję…' : 'Test połączenia'}
+        </Button>
+        <Button type="button" buttonStyle="primary" disabled={busy} onClick={onSync}>
+          {loadingSync ? 'Synchronizuję…' : 'Synchronizuj z Google Calendar'}
+        </Button>
+      </div>
       {result ? (
         <p
           style={{

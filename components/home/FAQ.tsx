@@ -24,9 +24,10 @@ export function FAQ({
         <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-9 lg:gap-[80px] items-start">
           <div className="faq-side">
             <span className="eyebrow">{dict.faq.eyebrow}</span>
-            <h2 className="font-display font-normal text-[44px] lg:text-[56px] uppercase leading-[0.95] my-3 lg:my-[12px_0_22px]">
-              {dict.faq.headline}
-            </h2>
+            <h2
+              className="font-display font-normal text-[44px] lg:text-[56px] uppercase leading-[0.95] my-3 lg:my-[12px_0_22px]"
+              dangerouslySetInnerHTML={{ __html: dict.faq.headline }}
+            />
             <p className="text-[15.5px] leading-[1.7] text-[#4a4638]">{dict.faq.subheadline}</p>
 
             <div className="bg-ink text-snow p-[30px] mt-[36px]">
