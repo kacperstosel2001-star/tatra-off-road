@@ -5,8 +5,15 @@ import {
   type ParsedGcalEvent,
 } from '@/lib/gcal/client'
 
+function isEnumSourceError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error || '')
+  return /google_calendar|enum_bookings_source|invalid input value for enum/i.test(message)
+}
+
 export async function upsertGcalParsedEvent(event: ParsedGcalEvent, totalQuads: number) {
-  if (!event.id || event.cancelled || !event.importable) return { action: 'skipped' as const }
+  if (!event.id || event.cancelled || !event.importable) {
+    return { action: 'skipped' as const, reason: 'not-importable' }
+  }
 
   const payload = await getPayloadClient()
 
@@ -50,7 +57,7 @@ export async function upsertGcalParsedEvent(event: ParsedGcalEvent, totalQuads: 
   const drivers = Math.min(totalQuads, Math.max(1, event.drivers))
   const customer = parseCustomerFromEvent(event)
 
-  const data = {
+  const baseData = {
     bookingDate: event.date,
     bookingTime: startTime,
     reservationEndTime: endTime,
@@ -62,7 +69,6 @@ export async function upsertGcalParsedEvent(event: ParsedGcalEvent, totalQuads: 
     customerLastName: customer.lastName,
     customerPhone: customer.phone,
     customerNotes: customer.notes,
-    source: 'google_calendar' as const,
     status: 'confirmed' as const,
     paymentStatus:
       event.depositAmount && event.depositAmount > 0
@@ -79,25 +85,41 @@ export async function upsertGcalParsedEvent(event: ParsedGcalEvent, totalQuads: 
 
   if (byEvent.docs[0]) {
     const existing = byEvent.docs[0]
-    // Nie nadpisuj rezerwacji z WWW / admina — tylko importy z kalendarza
-    if (existing.source !== 'google_calendar') {
+    // Nie nadpisuj rezerwacji z WWW — tylko importy z kalendarza / telefon
+    if (existing.source === 'website') {
       return { action: 'exists' as const }
     }
     await payload.update({
       collection: 'bookings',
       id: existing.id,
-      data,
+      data: {
+        ...baseData,
+        source: existing.source === 'google_calendar' ? 'google_calendar' : existing.source,
+      },
       overrideAccess: true,
     })
     return { action: 'updated' as const }
   }
 
-  await payload.create({
-    collection: 'bookings',
-    data,
-    overrideAccess: true,
-  })
-  return { action: 'created' as const }
+  try {
+    await payload.create({
+      collection: 'bookings',
+      data: { ...baseData, source: 'google_calendar' },
+      overrideAccess: true,
+    })
+    return { action: 'created' as const }
+  } catch (error) {
+    // Stary enum w Postgres bez google_calendar — zapisujemy jako telefon, żeby sync nie padał
+    if (isEnumSourceError(error)) {
+      await payload.create({
+        collection: 'bookings',
+        data: { ...baseData, source: 'phone' },
+        overrideAccess: true,
+      })
+      return { action: 'created' as const, reason: 'fallback-phone' }
+    }
+    throw error
+  }
 }
 
 function splitName(raw: string): { firstName: string; lastName: string } {
@@ -141,6 +163,7 @@ export type GcalSyncResult = {
   linked: number
   skipped: number
   days: number
+  errors?: string[]
 }
 
 /**
@@ -199,6 +222,7 @@ export async function syncGoogleCalendarBookings(args?: {
   let updated = 0
   let linked = 0
   let skipped = 0
+  const errors: string[] = []
 
   for (const event of listed.events) {
     try {
@@ -208,19 +232,25 @@ export async function syncGoogleCalendarBookings(args?: {
       else if (result.action === 'linked') linked += 1
       else skipped += 1
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
       console.error('GCal sync event failed', event.id, error)
+      errors.push(`${event.summary || event.id}: ${msg}`)
       skipped += 1
     }
   }
 
+  const errorHint =
+    errors.length > 0 ? ` Błędy: ${errors.slice(0, 3).join(' | ')}${errors.length > 3 ? '…' : ''}` : ''
+
   return {
-    ok: true,
-    message: `Zsynchronizowano ${fromDate} → ${toDate}: +${created} nowych, ${updated} zaktualizowanych, ${linked} powiązanych (${listed.events.length} wydarzeń).`,
+    ok: errors.length === 0,
+    message: `Kalendarz ${fromDate} → ${toDate}: znaleziono ${listed.events.length}, +${created} nowych, ${updated} zaktualizowanych, ${linked} powiązanych, ${skipped} pominiętych.${errorHint}`,
     created,
     updated,
     linked,
     skipped,
     days: daysBack + daysForward + 1,
+    errors: errors.length ? errors : undefined,
   }
 }
 

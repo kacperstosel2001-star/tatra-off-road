@@ -269,10 +269,16 @@ async function loadDayBusyIntervals(
       if (new Date(booking.expiresAt).getTime() < Date.now()) continue
     }
 
-    // Gdy GCal działa: opłacone/potwierdzone z eventem w kalendarzu liczymy TYLKO z GCal.
-    // Usunięcie wydarzenia z kalendarza zwalnia slot (nawet jeśli rekord zostaje w bazie).
-    if (gcalOk && (booking.status === 'deposit_paid' || booking.status === 'confirmed')) {
-      if (booking.gcalEventId) continue
+    // Gdy GCal działa: rezerwacje WWW zsynchronizowane do kalendarza liczymy z GCal
+    // (żeby usunięcie eventa zwalniało slot). Importy z kalendarza / telefon / admin
+    // zawsze liczymy też z bazy — inaczej przy błędzie parsowania zostaje „dziura”.
+    if (
+      gcalOk &&
+      booking.gcalEventId &&
+      booking.source === 'website' &&
+      (booking.status === 'deposit_paid' || booking.status === 'confirmed')
+    ) {
+      continue
     }
 
     const interval = bookingInterval(booking)

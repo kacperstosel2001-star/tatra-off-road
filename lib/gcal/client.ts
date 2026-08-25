@@ -297,6 +297,26 @@ function minutesToHhMm(minutes: number): string {
  * Format tytułu (Wasze ręczne wpisy i nowe z systemu):
  * REZERWACJA QUAD | 2026-08-23 | 09:00-10:00 | 1 quad 2 osoby 50 zadatku 250 dopłaty | Joanna Skaletz
  */
+function parseTitleSchedule(summary: string): {
+  date?: string
+  startMin?: number
+  endMin?: number
+} {
+  const parts = summary.split('|').map((p) => p.trim()).filter(Boolean)
+  let date: string | undefined
+  let startMin: number | undefined
+  let endMin: number | undefined
+  for (const part of parts) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(part)) date = part
+    const timeMatch = part.match(/^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/)
+    if (timeMatch) {
+      startMin = Number(timeMatch[1]) * 60 + Number(timeMatch[2])
+      endMin = Number(timeMatch[3]) * 60 + Number(timeMatch[4])
+    }
+  }
+  return { date, startMin, endMin }
+}
+
 function parseSummaryDetails(
   summary: string,
   totalQuads: number,
@@ -324,7 +344,10 @@ function parseSummaryDetails(
     const quadMatch = detailsPart.match(/(\d+)\s*quad/i)
     if (quadMatch) drivers = Number(quadMatch[1])
   }
-  if (!drivers) drivers = totalQuads
+  // Tytuł REZERWACJA bez liczby quadów = pełna blokada; zwykłe wydarzenie też
+  if (!drivers) {
+    drivers = /rezerwacja\s*quad/i.test(summary) ? totalQuads : totalQuads
+  }
   drivers = Math.min(totalQuads, Math.max(1, drivers))
 
   let passengers = fromPropsPassengers > 0 ? fromPropsPassengers : 0
@@ -381,14 +404,42 @@ function parseEventForDate(
   const summary = String(event.summary || '')
   const description = String(event.description || '')
   const parsed = parseSummaryDetails(summary, totalQuads, privateProps)
+  const titleSchedule = parseTitleSchedule(summary)
   const drivers = parsed.drivers
   const passengers = parsed.passengers
   const phone = parsed.phone
   const customerName = parsed.customerName
 
-  // Całodniowe
+  // Całodniowe — jeśli w tytule jest konkretna godzina, traktuj jak timed (Wasze ręczne wpisy)
   if (event.start?.date && event.end?.date) {
     if (!(event.start.date <= date && event.end.date > date)) return null
+    if (
+      titleSchedule.date === date &&
+      titleSchedule.startMin != null &&
+      titleSchedule.endMin != null &&
+      titleSchedule.endMin > titleSchedule.startMin
+    ) {
+      return {
+        id: event.id,
+        summary,
+        description,
+        cancelled,
+        allDay: false,
+        importable: true,
+        date,
+        startMin: titleSchedule.startMin,
+        endMin: titleSchedule.endMin,
+        startTime: minutesToHhMm(titleSchedule.startMin),
+        endTime: minutesToHhMm(titleSchedule.endMin),
+        drivers,
+        passengers,
+        depositAmount: parsed.depositAmount,
+        remainingAmount: parsed.remainingAmount,
+        bookingId,
+        customerName,
+        phone,
+      }
+    }
     return {
       id: event.id,
       summary,
@@ -411,7 +462,37 @@ function parseEventForDate(
     }
   }
 
-  if (!event.start?.dateTime || !event.end?.dateTime) return null
+  if (!event.start?.dateTime || !event.end?.dateTime) {
+    // Sam tytuł z datą/godziną (bez poprawnych dat w Google)
+    if (
+      titleSchedule.date === date &&
+      titleSchedule.startMin != null &&
+      titleSchedule.endMin != null &&
+      titleSchedule.endMin > titleSchedule.startMin
+    ) {
+      return {
+        id: event.id,
+        summary,
+        description,
+        cancelled,
+        allDay: false,
+        importable: true,
+        date,
+        startMin: titleSchedule.startMin,
+        endMin: titleSchedule.endMin,
+        startTime: minutesToHhMm(titleSchedule.startMin),
+        endTime: minutesToHhMm(titleSchedule.endMin),
+        drivers,
+        passengers,
+        depositAmount: parsed.depositAmount,
+        remainingAmount: parsed.remainingAmount,
+        bookingId,
+        customerName,
+        phone,
+      }
+    }
+    return null
+  }
 
   const startAt = new Date(event.start.dateTime)
   const endAt = new Date(event.end.dateTime)
@@ -420,16 +501,34 @@ function parseEventForDate(
   const startLocal = formatInWarsaw(startAt)
   const endLocal = formatInWarsaw(endAt)
 
+  // Preferuj datę/godziny z tytułu — zgodne z Waszym formatem wpisów
+  const effectiveDate = titleSchedule.date || startLocal.date
+  if (effectiveDate !== date && startLocal.date !== date) {
+    // Event może nachodzić na ten dzień bez startu dziś
+    if (!(startLocal.date < date && endLocal.date >= date) && titleSchedule.date !== date) {
+      return null
+    }
+  }
+
   let startMin = 0
   let endMin = 24 * 60
 
-  if (startLocal.date === date) startMin = startLocal.minutes
-  else if (startLocal.date > date) return null
+  if (titleSchedule.date === date && titleSchedule.startMin != null && titleSchedule.endMin != null) {
+    startMin = titleSchedule.startMin
+    endMin = titleSchedule.endMin
+  } else {
+    if (startLocal.date === date) startMin = startLocal.minutes
+    else if (startLocal.date > date) return null
 
-  if (endLocal.date === date) endMin = endLocal.minutes
-  else if (endLocal.date < date) return null
+    if (endLocal.date === date) endMin = endLocal.minutes
+    else if (endLocal.date < date) return null
+  }
 
   if (endMin <= startMin) return null
+
+  const importable =
+    (titleSchedule.date ? titleSchedule.date === date : startLocal.date === date) ||
+    startLocal.date === date
 
   return {
     id: event.id,
@@ -437,11 +536,11 @@ function parseEventForDate(
     description,
     cancelled,
     allDay: false,
-    importable: startLocal.date === date,
-    date: startLocal.date === date ? date : startLocal.date,
+    importable,
+    date: titleSchedule.date === date ? date : startLocal.date === date ? date : effectiveDate,
     startMin,
     endMin,
-    startTime: minutesToHhMm(startLocal.date === date ? startMin : 8 * 60),
+    startTime: minutesToHhMm(startMin),
     endTime: minutesToHhMm(Math.min(endMin, 24 * 60 - 1)),
     drivers,
     passengers,

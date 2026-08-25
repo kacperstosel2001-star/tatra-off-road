@@ -210,6 +210,24 @@ async function ensureBookingEmailColumn(client: pg.Client) {
   )
 }
 
+async function ensureBookingsSourceEnum(client: pg.Client) {
+  // Nowa wartość źródła importu z Google — bez tego payload.create pada i sync „czyta, ale nie dodaje”
+  const added = await runIgnore(
+    client,
+    `ALTER TYPE public.enum_bookings_source ADD VALUE IF NOT EXISTS 'google_calendar'`,
+  )
+  if (!added) {
+    await runIgnore(
+      client,
+      `DO $$ BEGIN
+        ALTER TYPE public.enum_bookings_source ADD VALUE 'google_calendar';
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$`,
+    )
+  }
+}
+
 async function repairExistingSchema(client: pg.Client) {
   await ensureSerialDefaults(client)
   await ensureAllPrimaryKeys(client)
@@ -218,6 +236,7 @@ async function repairExistingSchema(client: pg.Client) {
   await applyDumpConstraints(client)
   await ensureAllPrimaryKeys(client)
   await ensureBookingEmailColumn(client)
+  await ensureBookingsSourceEnum(client)
   await markMigration(client)
 }
 

@@ -59,7 +59,8 @@ CREATE TYPE public.enum_bookings_payment_status AS ENUM (
 CREATE TYPE public.enum_bookings_source AS ENUM (
     'website',
     'manual_admin',
-    'phone'
+    'phone',
+    'google_calendar'
 );
 
 
