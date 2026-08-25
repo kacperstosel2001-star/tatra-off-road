@@ -26,7 +26,8 @@ export const SiteSettings: GlobalConfig = {
       label: 'Telefony',
       labels: { singular: 'Telefon', plural: 'Telefony' },
       admin: {
-        description: 'Pierwszy numer = główny (nagłówek, sticky CTA, przyciski „Zadzwoń”).',
+        description:
+          'Pierwszy numer = główny (530 198 735). Drugi może zostać jako dodatkowy (888…). Nagłówek, sticky CTA i „Zadzwoń” biorą pierwszy.',
       },
       fields: [{ name: 'number', type: 'text', required: true, label: 'Numer' }],
     },

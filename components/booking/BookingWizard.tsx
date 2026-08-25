@@ -67,7 +67,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
     { id: 'details', label: ui.steps.details },
   ]
   const contact = useContact()
-  const phoneNumber = contact.phones[0] || '+48 888 254 223'
+  const phoneNumber = contact.phones[0] || '+48 530 198 735'
   const copy = {
     noSlotTitle: dict?.booking?.noSlotTitle || ui.faq[0].q,
     noSlotBody: dict?.booking?.noSlotBody || ui.faq[0].a,

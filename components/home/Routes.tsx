@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { RouteDTO } from '@/types/payload';
-import { Map, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export function Routes({ dict, routes }: { dict: any; routes: RouteDTO[] }) {
   return (
@@ -30,12 +30,12 @@ export function Routes({ dict, routes }: { dict: any; routes: RouteDTO[] }) {
                 <h3 className="font-display font-normal text-[32px] uppercase m-0 mb-[10px] leading-none">{route.title}</h3>
                 <p className="text-[14px] leading-[1.55] text-[#E7E1D0] m-0 mb-[18px]">{route.description}</p>
                 <div className="flex gap-5 font-label uppercase text-[11.5px] tracking-[0.08em] text-stone font-semibold pt-4 border-t border-[rgba(245,241,231,0.16)]">
-                  <div className="flex items-center gap-[6px]">
-                    <Map className="w-3 h-3 fill-orange text-orange" />{route.distance}
-                  </div>
-                  <div className="flex items-center gap-[6px]">
-                    <Clock className="w-3 h-3 fill-orange text-orange" />{route.duration}
-                  </div>
+                  {route.duration ? (
+                    <div className="flex items-center gap-[6px]">
+                      <Clock className="w-3 h-3 fill-orange text-orange" />
+                      {route.duration}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>

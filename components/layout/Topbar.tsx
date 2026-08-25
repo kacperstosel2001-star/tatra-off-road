@@ -9,7 +9,7 @@ export function Topbar({ lang = 'pl' }: { lang?: string }) {
   const hours =
     contact.hours ||
     (lang === 'en' ? 'Ząb · Mon–Sun 8:00–20:00' : 'Ząb · pn–nd 8:00–20:00')
-  const phones = contact.phones.length ? contact.phones : ['+48 888 254 223']
+  const phones = contact.phones.length ? contact.phones : ['+48 530 198 735']
 
   return (
     <div className="site-topbar hidden lg:block relative z-40 bg-ink text-stone font-label text-[12.5px] tracking-[0.06em] border-b border-[rgba(245,241,231,0.08)]">

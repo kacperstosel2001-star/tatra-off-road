@@ -105,6 +105,7 @@ export async function POST(request: Request) {
         customerLastName: lastName,
         customerPhone: phone,
         customerEmail: email || undefined,
+        entryKind: 'booking',
         source: 'website',
         status: 'pending',
         sessionId,

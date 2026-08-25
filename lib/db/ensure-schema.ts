@@ -208,6 +208,14 @@ async function ensureBookingEmailColumn(client: pg.Client) {
     client,
     `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS confirmation_email_sent_at timestamp with time zone`,
   )
+  await runIgnore(
+    client,
+    `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS entry_kind character varying DEFAULT 'booking'`,
+  )
+  await runIgnore(
+    client,
+    `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS block_end_date timestamp with time zone`,
+  )
 }
 
 async function ensureBookingsSourceEnum(client: pg.Client) {

@@ -20,14 +20,12 @@ const FEATURES_PL = [
   'Kask i ochraniacze',
   'Paliwo w cenie',
   'Briefing + przewodnik',
-  'Ubezpieczenie NNW',
 ]
 
 const FEATURES_EN = [
   'Helmet and protectors',
   'Fuel included',
   'Briefing + guide',
-  'NNW insurance',
 ]
 
 export function Pricing({
@@ -48,7 +46,7 @@ export function Pricing({
       ? 'No trips published yet. Check back soon or call us.'
       : 'Brak opublikowanych wypraw. Zadzwoń lub wróć wkrótce.'
   const contact = useContact()
-  const phoneNumber = contact.phones[0] || '+48 888 254 223'
+  const phoneNumber = contact.phones[0] || '+48 530 198 735'
 
   return (
     <section className="bg-paper overflow-hidden section-pad" id="cennik">

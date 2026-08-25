@@ -15,7 +15,7 @@ export function FAQ({
   phone?: string
 }) {
   const contact = useContact()
-  const callPhone = phone || contact.phones[0] || '+48 888 254 223'
+  const callPhone = phone || contact.phones[0] || '+48 530 198 735'
 
   return (
     <section className="bg-paper section-pad" id="faq">

@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext } from 'react'
 import type { ContactInfoDTO } from '@/types/payload'
+import { DEFAULT_PHONES, PRIMARY_PHONE } from '@/lib/content/phones'
 
 const defaults: ContactInfoDTO = {
   address: 'Ul. Świętej Anny 39, 34-521 Ząb',
-  phones: ['+48 888 254 223', '+48 530 198 735'],
+  phones: [...DEFAULT_PHONES],
   email: 'tatraoffroad@gmail.com',
   hours: 'Wyprawy codziennie, 8:00–20:00, po rezerwacji',
-  whatsapp: '+48 888 254 223',
+  whatsapp: PRIMARY_PHONE,
 }
 
 const ContactContext = createContext<ContactInfoDTO>(defaults)

@@ -18,8 +18,8 @@ export const TourRoutes: CollectionConfig = {
     {
       type: 'row',
       fields: [
-        { name: 'distance', type: 'text', localized: true, label: 'Dystans', admin: { width: '50%' } },
-        { name: 'duration', type: 'text', localized: true, label: 'Czas', admin: { width: '50%' } },
+        { name: 'distance', type: 'text', localized: true, label: 'Dystans (nie pokazywany na stronie)', admin: { width: '50%', description: 'Pole nieużywane na froncie — zostaw puste.' } },
+        { name: 'duration', type: 'text', localized: true, label: 'Czas (np. 1 godz. / 2 godz.)', admin: { width: '50%' } },
       ],
     },
     { name: 'image', type: 'upload', relationTo: 'media', label: 'Zdjęcie' },

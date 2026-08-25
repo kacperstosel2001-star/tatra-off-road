@@ -45,7 +45,7 @@ const SAMPLE_NEWS_POSTS = [
     excerpt:
       'Kask, briefing i tempo grupy to podstawa. Opisujemy, jak dbamy o bezpieczeństwo na każdej trasie.',
     content:
-      '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami, a przewodnik dostosowuje tempo do grupy.</p><p>Ubezpieczenie NNW jest wliczone w pakiet — dzięki temu możesz skupić się na widokach i adrenaliny.</p>',
+      '<p>Przed startem każdy uczestnik dostaje sprzęt ochronny i krótkie szkolenie. Jedziemy tylko legalnymi trasami, a przewodnik dostosowuje tempo do grupy.</p>',
     publishedAt: '2026-07-02T09:00:00.000Z',
     imageUrl:
       '/site-media/photo-03.jpeg',
@@ -165,7 +165,7 @@ export async function seedSiteContent(payload: Payload) {
         {
           title: 'Bezpieczeństwo bez kompromisów',
           description:
-            'Kask, ochraniacze, briefing przed startem i przewodnik pilnujący grupy przez cały czas. Ubezpieczenie NNW jest wliczone w każdy pakiet.',
+            'Kask, ochraniacze, briefing przed startem i przewodnik pilnujący grupy przez cały czas.',
           iconName: 'shield',
           sortOrder: 3,
         },
@@ -226,7 +226,7 @@ export async function seedSiteContent(payload: Payload) {
           difficulty: 'Łatwa',
           routeNum: 'TRASA 01',
           description: 'Leśne ścieżki i błotniste odcinki tuż za Zębem. Idealna na pierwszą jazdę quadem.',
-          distance: '8 km',
+          distance: '',
           duration: '1 godz.',
           imageUrl:
             '/site-media/photo-02.jpeg',
@@ -237,7 +237,7 @@ export async function seedSiteContent(payload: Payload) {
           difficulty: 'Średnia',
           routeNum: 'TRASA 02',
           description: 'Wyraźne podjazdy i widoki na Tatry — dla tych, którzy chcą poczuć teren pod kołami.',
-          distance: '14 km',
+          distance: '',
           duration: '2 godz.',
           imageUrl:
             '/site-media/photo-03.jpeg',
@@ -248,8 +248,8 @@ export async function seedSiteContent(payload: Payload) {
           difficulty: 'Panoramiczna',
           routeNum: 'TRASA 03',
           description: 'Najlepsza o zachodzie słońca — grzbiety, polany i widok na całe Podhale.',
-          distance: '18 km',
-          duration: '2,5 godz.',
+          distance: '',
+          duration: '2 godz.',
           imageUrl:
             '/site-media/photo-04.jpeg',
           sortOrder: 3,
@@ -345,7 +345,7 @@ export async function seedSiteContent(payload: Payload) {
         {
           question: 'Co jest wliczone w cenę?',
           answer:
-            'Kask, ochraniacze, paliwo, ubezpieczenie NNW oraz opieka doświadczonego przewodnika przez całą trasę. Wystarczy przyjechać w wygodnym, zakrytym obuwiu.',
+            'Kask, ochraniacze, paliwo oraz opieka doświadczonego przewodnika przez całą trasę. Wystarczy przyjechać w wygodnym, zakrytym obuwiu.',
           sortOrder: 3,
         },
         {
@@ -516,9 +516,9 @@ export async function seedSiteContent(payload: Payload) {
         locale: 'pl',
         data: {
           address: 'Ul. Świętej Anny 39, 34-521 Ząb',
-          phones: [{ number: '+48 888 254 223' }, { number: '+48 530 198 735' }],
+          phones: [{ number: '+48 530 198 735' }, { number: '+48 888 254 223' }],
           email: 'tatraoffroad@gmail.com',
-          whatsapp: '+48 888 254 223',
+          whatsapp: '+48 530 198 735',
           hours: 'Wyprawy codziennie, 8:00–20:00, po rezerwacji',
         } as any,
       })

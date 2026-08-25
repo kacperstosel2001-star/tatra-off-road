@@ -403,7 +403,6 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
         <ul className="mt-6 mb-0 pl-4 text-[13px] opacity-75 grid gap-2">
           <li>{ui.afterPay}</li>
           <li>{ui.arriveEarly}</li>
-          <li>{ui.cancelRule}</li>
         </ul>
       </aside>
     </div>

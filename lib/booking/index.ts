@@ -237,8 +237,23 @@ async function loadDayBusyIntervals(
     collection: 'bookings',
     where: {
       and: [
-        { bookingDate: { greater_than_equal: `${date}T00:00:00.000Z` } },
-        { bookingDate: { less_than_equal: `${date}T23:59:59.999Z` } },
+        {
+          or: [
+            {
+              and: [
+                { bookingDate: { greater_than_equal: `${date}T00:00:00.000Z` } },
+                { bookingDate: { less_than_equal: `${date}T23:59:59.999Z` } },
+              ],
+            },
+            {
+              and: [
+                { entryKind: { equals: 'block' } },
+                { bookingDate: { less_than_equal: `${date}T23:59:59.999Z` } },
+                { blockEndDate: { greater_than_equal: `${date}T00:00:00.000Z` } },
+              ],
+            },
+          ],
+        },
         {
           or: [
             { status: { equals: 'confirmed' } },
@@ -255,7 +270,11 @@ async function loadDayBusyIntervals(
   const intervals: { start: number; end: number; drivers: number }[] = []
 
   for (const booking of result.docs as Booking[]) {
-    if (normalizeBookingDate(booking.bookingDate) !== date) continue
+    const startDay = normalizeBookingDate(booking.bookingDate)
+    const endDay = normalizeBookingDate((booking as any).blockEndDate) || startDay
+    const coversDay =
+      startDay === date || (startDay <= date && endDay >= date && (booking as any).entryKind === 'block')
+    if (!coversDay) continue
     if (args.excludeBookingId && String(booking.id) === String(args.excludeBookingId)) continue
     if (
       booking.status === 'pending' &&
@@ -283,6 +302,11 @@ async function loadDayBusyIntervals(
 
     const interval = bookingInterval(booking)
     if (!interval) continue
+    // Blokada bez konkretnych godzin → cały dzień
+    if ((booking as any).entryKind === 'block' && (!booking.bookingTime || !booking.reservationEndTime)) {
+      intervals.push({ start: 0, end: 24 * 60, drivers: interval.drivers || settings.totalQuads })
+      continue
+    }
     intervals.push(interval)
   }
 

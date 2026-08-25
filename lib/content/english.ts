@@ -83,7 +83,7 @@ export const EN_FEATURES: FeatureDTO[] = [
     id: '3',
     title: 'Safety without shortcuts',
     description:
-      'Helmet, protectors, a pre-ride briefing and a guide with the group the whole time. NNW insurance included in every package.',
+      'Helmet, protectors, a pre-ride briefing and a guide with the group the whole time.',
     iconName: 'shield',
   },
   {
@@ -102,7 +102,7 @@ export const EN_ROUTES: RouteDTO[] = [
     difficulty: 'Easy',
     routeNum: 'ROUTE 01',
     description: 'Forest paths and muddy stretches just outside Ząb. Perfect for your first ATV ride.',
-    distance: '8 km',
+    distance: '',
     duration: '1 h',
     image: SITE_PHOTO['03'],
   },
@@ -112,7 +112,7 @@ export const EN_ROUTES: RouteDTO[] = [
     difficulty: 'Medium',
     routeNum: 'ROUTE 02',
     description: 'Clear climbs and Tatra views — for anyone who wants to feel the terrain under the wheels.',
-    distance: '14 km',
+    distance: '',
     duration: '2 h',
     image: SITE_PHOTO['04'],
   },
@@ -122,8 +122,8 @@ export const EN_ROUTES: RouteDTO[] = [
     difficulty: 'Scenic',
     routeNum: 'ROUTE 03',
     description: 'Best at sunset — ridges, clearings and a view across Podhale.',
-    distance: '18 km',
-    duration: '2.5 h',
+    distance: '',
+    duration: '2 h',
     image: SITE_PHOTO['05'],
   },
 ]
@@ -196,7 +196,7 @@ export const EN_FAQ: FaqDTO[] = [
   {
     id: '2',
     question: 'What is included in the price?',
-    answer: 'Quad, fuel, helmet, briefing and a guide on the trail. NNW insurance included.',
+    answer: 'Quad, fuel, helmet, briefing and a guide on the trail.',
   },
   {
     id: '3',
@@ -205,17 +205,12 @@ export const EN_FAQ: FaqDTO[] = [
   },
   {
     id: '4',
-    question: 'Can I cancel or change the date?',
-    answer: 'Yes — at least 24 hours before the start. Call us and we’ll help reschedule.',
-  },
-  {
-    id: '5',
     question: 'What should I bring?',
     answer:
       'Closed sports or trekking shoes and comfortable clothes for the weather. We provide the rest of the protective gear.',
   },
   {
-    id: '6',
+    id: '5',
     question: 'Nothing free online?',
     answer:
       'Call us — we’re often on site and can check an earlier start or a newly freed spot, even if the calendar looks full.',

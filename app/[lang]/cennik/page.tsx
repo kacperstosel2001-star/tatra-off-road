@@ -92,10 +92,10 @@ export default async function PricingPage({ params }: { params: Promise<{ lang: 
                   {dict.common.book}
                 </Link>
                 <a
-                  href={`tel:${(contactInfo.phones[0] || '+48888254223').replace(/\s/g, '')}`}
+                  href={`tel:${(contactInfo.phones[0] || '+48530198735').replace(/\s/g, '')}`}
                   className="btn btn-outline justify-center text-center"
                 >
-                  <PhoneCall className="w-4 h-4 mr-2" /> {contactInfo.phones[0] || '+48 888 254 223'}
+                  <PhoneCall className="w-4 h-4 mr-2" /> {contactInfo.phones[0] || '+48 530 198 735'}
                 </a>
               </div>
             </div>

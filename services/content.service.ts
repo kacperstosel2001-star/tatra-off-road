@@ -13,6 +13,7 @@ import {
   EN_ROUTES,
   EN_PAGE,
 } from '@/lib/content/english'
+import { orderContactPhones, PRIMARY_PHONE } from '@/lib/content/phones'
 import {
   getSiteGallery,
   SITE_CTA_IMAGE,
@@ -326,7 +327,11 @@ export class PayloadContentService implements ContentRepository {
         return result.docs.map((d: any) => ({
           id: String(d.id),
           title: d.title,
-          description: d.description || '',
+          description: String(d.description || '')
+            .replace(/\.?\s*Ubezpieczenie NNW[^.]*\.?/gi, '.')
+            .replace(/\s{2,}/g, ' ')
+            .replace(/\.\s*\./g, '.')
+            .trim(),
           iconName: d.iconName || 'star',
         }))
       }
@@ -352,7 +357,7 @@ export class PayloadContentService implements ContentRepository {
         id: '3',
         title: 'Bezpieczeństwo bez kompromisów',
         description:
-          'Kask, ochraniacze, briefing przed startem i przewodnik pilnujący grupy przez cały czas. Ubezpieczenie NNW jest wliczone w każdy pakiet.',
+          'Kask, ochraniacze, briefing przed startem i przewodnik pilnujący grupy przez cały czas.',
         iconName: 'shield',
       },
       {
@@ -446,8 +451,10 @@ export class PayloadContentService implements ContentRepository {
             difficulty: d.difficulty || '',
             routeNum: d.routeNum || '',
             description: d.description || '',
-            distance: d.distance || '',
-            duration: d.duration || '',
+            distance: '',
+            duration: String(d.duration || '')
+              .replace(/2[,.]5\s*godz\.?/gi, '2 godz.')
+              .replace(/2[,.]5\s*h/gi, '2 h'),
             image: resolveRealMediaUrl(d.image, d.imageUrl, fallback),
           }
         })
@@ -462,7 +469,7 @@ export class PayloadContentService implements ContentRepository {
         difficulty: 'Łatwa',
         routeNum: 'TRASA 01',
         description: 'Leśne ścieżki i błotniste odcinki tuż za Zębem. Idealna na pierwszą jazdę quadem.',
-        distance: '8 km',
+        distance: '',
         duration: '1 godz.',
         image: SITE_PHOTO['03'],
       },
@@ -472,7 +479,7 @@ export class PayloadContentService implements ContentRepository {
         difficulty: 'Średnia',
         routeNum: 'TRASA 02',
         description: 'Wyraźne podjazdy i widoki na Tatry — dla tych, którzy chcą poczuć teren pod kołami.',
-        distance: '14 km',
+        distance: '',
         duration: '2 godz.',
         image: SITE_PHOTO['04'],
       },
@@ -482,8 +489,8 @@ export class PayloadContentService implements ContentRepository {
         difficulty: 'Panoramiczna',
         routeNum: 'TRASA 03',
         description: 'Najlepsza o zachodzie słońca — grzbiety, polany i widok na całe Podhale.',
-        distance: '18 km',
-        duration: '2,5 godz.',
+        distance: '',
+        duration: '2 godz.',
         image: SITE_PHOTO['05'],
       },
     ]
@@ -614,11 +621,16 @@ export class PayloadContentService implements ContentRepository {
         limit: 100,
       })
       if (result.docs.length) {
-        return result.docs.map((d: any) => ({
-          id: String(d.id),
-          question: d.question,
-          answer: d.answer,
-        }))
+        return result.docs
+          .map((d: any) => ({
+            id: String(d.id),
+            question: d.question,
+            answer: String(d.answer || '')
+              .replace(/,?\s*ubezpieczenie NNW[^.]*\.?/gi, '')
+              .replace(/\s{2,}/g, ' ')
+              .trim(),
+          }))
+          .filter((item) => !/anulow|odwołanie 24|24\s*h.*anul|cancel.*24/i.test(`${item.question} ${item.answer}`))
       }
     } catch {
       /* fallback */
@@ -714,7 +726,9 @@ export class PayloadContentService implements ContentRepository {
       })
       const s = settings as any
       if (s.address || s.email || s.phones?.length) {
-        const phones = (s.phones || []).map((p: any) => p.number).filter(Boolean)
+        const phones = orderContactPhones(
+          (s.phones || []).map((p: any) => p.number).filter(Boolean),
+        )
         const hoursRaw = s.hours || ''
         const hours =
           loc(locale) === 'en'
@@ -725,7 +739,7 @@ export class PayloadContentService implements ContentRepository {
           phones,
           email: s.email || '',
           hours,
-          whatsapp: s.whatsapp || phones[0] || '',
+          whatsapp: s.whatsapp || phones[0] || PRIMARY_PHONE,
         }
       }
     } catch {
@@ -733,10 +747,10 @@ export class PayloadContentService implements ContentRepository {
     }
     return {
       address: 'Ul. Świętej Anny 39, 34-521 Ząb',
-      phones: ['+48 888 254 223', '+48 530 198 735'],
+      phones: ['+48 530 198 735', '+48 888 254 223'],
       email: 'tatraoffroad@gmail.com',
       hours: loc(locale) === 'en' ? hoursEn : hoursPl,
-      whatsapp: '+48 888 254 223',
+      whatsapp: '+48 530 198 735',
     }
   }
 

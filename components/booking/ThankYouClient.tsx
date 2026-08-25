@@ -168,7 +168,7 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             Odśwież status
           </button>
           <a
-            href="tel:+48888254223"
+            href="tel:+48530198735"
             className="inline-flex items-center gap-2 border border-stone-line px-6 py-4 font-label uppercase tracking-[0.08em] font-bold"
           >
             <Phone size={16} /> {lang === 'en' ? 'Call' : 'Zadzwoń'}
@@ -261,10 +261,10 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             {ui.home}
           </Link>
           <a
-            href="tel:+48888254223"
+            href="tel:+48530198735"
             className="btn btn-ghost"
           >
-            <Phone size={16} /> +48 888 254 223
+            <Phone size={16} /> +48 530 198 735
           </a>
         </div>
       </div>
@@ -276,7 +276,6 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
           <li>{ui.next2}</li>
           <li>{ui.next3}</li>
           <li>{ui.next4.replace('{amount}', String(booking.remainingAmount ?? 0))}</li>
-          <li>{ui.next5}</li>
         </ol>
         {booking.cashbillPaymentId && (
           <p className="mt-6 mb-0 text-[12px] opacity-50">CashBill: {booking.cashbillPaymentId}</p>

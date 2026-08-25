@@ -30,11 +30,12 @@
     "finePrint": "Wir antworten innerhalb von 30 Minuten · 8:00–20:00"
   },
   "trust": {
-    "insurance": "Versicherung inklusive",
+    "insurance": "Legale Strecken",
+    "legalTrails": "Legale Strecken",
     "response": "Antwortzeit",
     "rating": "Google 5/5",
     "newFleet": "Can-Am 2025",
-    "cancellation": "Kostenlose Stornierung"
+    "cancellation": "Can-Am 2025"
   },
   "testimonials": {
     "eyebrow": "Kundenstimmen",
@@ -65,7 +66,7 @@
   "pricing": {
     "eyebrow": "Preise",
     "headline": "Wählen Sie<br/>Ihre Reise",
-    "subheadline": "Preise pro Person. Helm, Protektoren, Benzin und NNW-Versicherung immer inklusive.",
+    "subheadline": "Preise pro Person. Helm, Protektoren, Benzin und Guide immer inklusive.",
     "highlight": "Am beliebtesten"
   },
   "process": {

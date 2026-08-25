@@ -31,11 +31,12 @@
     "finePrint": "Odpowiadamy w ciągu 30 minut · 8:00–20:00"
   },
   "trust": {
-    "insurance": "Ubezpieczenie NNW",
+    "insurance": "Legalne trasy",
+    "legalTrails": "Legalne trasy",
     "response": "Odpowiedź na zapytanie",
     "rating": "Google 5/5",
     "newFleet": "Sprzęt Can-Am 2025",
-    "cancellation": "Odwołanie bez opłat"
+    "cancellation": "Can-Am 2025"
   },
   "testimonials": {
     "eyebrow": "Opinie klientów",
@@ -66,7 +67,7 @@
   "pricing": {
     "eyebrow": "Cennik",
     "headline": "Wybierz<br/>swój wyjazd",
-    "subheadline": "Ceny za osobę. Kask, ochraniacze, paliwo i ubezpieczenie NNW zawsze w cenie.",
+    "subheadline": "Ceny za osobę. Kask, ochraniacze, paliwo i przewodnik zawsze w cenie.",
     "highlight": "Najczęściej wybierana"
   },
   "process": {

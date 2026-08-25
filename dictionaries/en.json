@@ -31,11 +31,12 @@
     "finePrint": "We respond within 30 minutes · 8:00–20:00"
   },
   "trust": {
-    "insurance": "Insurance included",
+    "insurance": "Legal trails",
+    "legalTrails": "Legal trails",
     "response": "Response time",
     "rating": "Google 5/5",
     "newFleet": "Can-Am 2025 gear",
-    "cancellation": "Free cancellation"
+    "cancellation": "Can-Am 2025"
   },
   "testimonials": {
     "eyebrow": "Guest reviews",
@@ -66,7 +67,7 @@
   "pricing": {
     "eyebrow": "Pricing",
     "headline": "Choose<br/>your trip",
-    "subheadline": "Prices per person. Helmet, protectors, fuel, and NNW insurance always included.",
+    "subheadline": "Prices per person. Helmet, protectors, fuel and guide always included.",
     "highlight": "Most popular"
   },
   "process": {

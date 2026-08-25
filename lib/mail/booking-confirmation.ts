@@ -33,7 +33,7 @@ function buildConfirmationContent(booking: Booking) {
   const total = booking.fullPrice ?? 0
   const drivers = booking.drivers ?? 0
   const passengers = booking.passengers ?? 0
-  const phone = process.env.PUBLIC_CONTACT_PHONE || '+48 888 254 223'
+  const phone = process.env.PUBLIC_CONTACT_PHONE || '+48 530 198 735'
   const site = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'https://tatraoffroad.pl'
 
   const subject = `Potwierdzenie rezerwacji #${booking.id} — Tatra Off-Road`

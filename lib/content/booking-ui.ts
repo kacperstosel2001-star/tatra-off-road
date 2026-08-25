@@ -91,7 +91,6 @@ export type BookingUiCopy = {
     payDepositAmount: string
     changeDate: string
     arriveEarly: string
-    cancelRule: string
   }
   thanks: {
     waiting: string
@@ -114,7 +113,6 @@ export type BookingUiCopy = {
     next2: string
     next3: string
     next4: string
-    next5: string
     syncError: string
     syncFail: string
     paymentFailed: string
@@ -185,11 +183,7 @@ export const BOOKING_UI_PL: BookingUiCopy = {
     },
     {
       q: 'Jak działa zaliczka?',
-      a: 'Online płacisz tylko zaliczkę (BLIK/przelew). Resztę dopłacasz na miejscu przed startem.',
-    },
-    {
-      q: 'Anulowanie',
-      a: 'Zmiana terminu lub anulacja minimum 24h przed startem — oddzwonimy i pomożemy.',
+      a: 'Online płacisz tylko zaliczkę (BLIK/przelew). Resztę dopłacasz na miejscu przed startem. Zaliczka nie podlega zwrotowi.',
     },
     {
       q: 'Wymagania',
@@ -237,7 +231,6 @@ export const BOOKING_UI_PL: BookingUiCopy = {
     payDepositAmount: 'Zapłać zaliczkę {amount} zł',
     changeDate: 'Zmień termin',
     arriveEarly: 'Przyjedź 10–15 min przed startem',
-    cancelRule: 'Anulacja / zmiana: min. 24h wcześniej',
   },
   thanks: {
     waiting: 'Czekamy na potwierdzenie',
@@ -261,7 +254,6 @@ export const BOOKING_UI_PL: BookingUiCopy = {
     next2: 'Bądź 15 minut wcześniej na miejscu.',
     next3: 'Kierowca musi mieć prawo jazdy kat. B.',
     next4: 'Na miejscu dopłacisz {amount} zł i dostaniesz briefing.',
-    next5: 'Zmiana / anulacja: zadzwoń min. 24h wcześniej.',
     syncError: 'Nie udało się potwierdzić płatności.',
     syncFail: 'Błąd połączenia podczas potwierdzania płatności.',
     paymentFailed: 'Płatność nieudana',
@@ -332,11 +324,7 @@ export const BOOKING_UI_EN: BookingUiCopy = {
     },
     {
       q: 'How does the deposit work?',
-      a: 'Online you pay only the deposit (BLIK/transfer). The rest is paid on site before the start.',
-    },
-    {
-      q: 'Cancellation',
-      a: 'Change or cancel at least 24 hours before the start — we’ll call back and help.',
+      a: 'Online you pay only the deposit (BLIK/transfer). The rest is paid on site before the start. The deposit is non-refundable.',
     },
     {
       q: 'Requirements',
@@ -384,7 +372,6 @@ export const BOOKING_UI_EN: BookingUiCopy = {
     payDepositAmount: 'Pay deposit {amount} zł',
     changeDate: 'Change date',
     arriveEarly: 'Arrive 10–15 min before the start',
-    cancelRule: 'Cancel / change: at least 24h in advance',
   },
   thanks: {
     waiting: 'Waiting for confirmation',
@@ -409,7 +396,6 @@ export const BOOKING_UI_EN: BookingUiCopy = {
     next2: 'Arrive 15 minutes early.',
     next3: 'The driver must hold a category B licence.',
     next4: 'On site you pay the remaining {amount} zł and get a briefing.',
-    next5: 'Change / cancel: call at least 24h in advance.',
     syncError: 'Could not confirm the payment.',
     syncFail: 'Connection error while confirming payment.',
     paymentFailed: 'Payment failed',

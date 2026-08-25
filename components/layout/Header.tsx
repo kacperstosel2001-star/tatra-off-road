@@ -13,7 +13,7 @@ export function Header({ dict, lang }: { dict: any; lang: string }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname() || '/'
   const contact = useContact()
-  const primaryPhone = contact.phones[0] || '+48 888 254 223'
+  const primaryPhone = contact.phones[0] || '+48 530 198 735'
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8)

@@ -8,7 +8,7 @@ import { telHref, useContact } from '@/components/providers/ContactProvider'
 
 export function StickyMobileCta({ dict, lang = 'pl' }: { dict: any; lang?: string }) {
   const contact = useContact()
-  const phone = contact.phones[0] || '+48 888 254 223'
+  const phone = contact.phones[0] || '+48 530 198 735'
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-[rgba(15,13,10,0.97)] backdrop-blur-md border-t border-[rgba(245,241,231,0.12)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-between items-center gap-3 shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">

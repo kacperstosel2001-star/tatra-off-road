@@ -3,23 +3,25 @@ import type { CollectionConfig } from 'payload'
 export const Bookings: CollectionConfig = {
   slug: 'bookings',
   labels: {
-    singular: 'Rezerwacja',
+    singular: 'Rezerwacja / blokada',
     plural: 'Rezerwacje',
   },
   admin: {
-    useAsTitle: 'customerPhone',
+    useAsTitle: 'customerFirstName',
     defaultColumns: [
+      'entryKind',
       'bookingDate',
+      'blockEndDate',
       'bookingTime',
       'customerFirstName',
       'customerLastName',
       'drivers',
       'status',
       'source',
-      'depositAmount',
     ],
     group: 'Rezerwacje',
-    description: 'Rezerwacje online i ręczne (administracyjne).',
+    description:
+      'Tu dodajesz ręczne rezerwacje (telefon / admin) oraz blokady terminów (np. cały dzień albo kilka dni). Blokada zajmuje całą pulę quadów i znika z wolnych godzin na stronie.',
   },
   access: {
     read: ({ req }) => Boolean(req.user),
@@ -29,12 +31,28 @@ export const Bookings: CollectionConfig = {
   },
   fields: [
     {
+      name: 'entryKind',
+      type: 'select',
+      required: true,
+      defaultValue: 'booking',
+      label: 'Typ wpisu',
+      options: [
+        { label: 'Rezerwacja klienta', value: 'booking' },
+        { label: 'Blokada terminu (zajęte quady)', value: 'block' },
+      ],
+      admin: {
+        description:
+          'Blokada: ustaw datę od–do (albo jeden dzień) i godziny — strona nie pozwoli zarezerwować tych godzin.',
+      },
+    },
+    {
       name: 'trip',
       type: 'relationship',
       relationTo: 'trips',
       label: 'Wyprawa',
       admin: {
-        description: 'Opcjonalne dla rezerwacji administracyjnej bez przypisanej wyprawy.',
+        description: 'Opcjonalne — przy blokadzie możesz zostawić puste.',
+        condition: (_, siblingData) => siblingData?.entryKind !== 'block',
       },
     },
     {
@@ -44,33 +62,52 @@ export const Bookings: CollectionConfig = {
           name: 'bookingDate',
           type: 'date',
           required: true,
-          label: 'Data',
+          label: 'Data od',
           admin: {
             date: { pickerAppearance: 'dayOnly', displayFormat: 'yyyy-MM-dd' },
             width: '33%',
           },
         },
         {
+          name: 'blockEndDate',
+          type: 'date',
+          label: 'Data do (blokada wielodniowa)',
+          admin: {
+            date: { pickerAppearance: 'dayOnly', displayFormat: 'yyyy-MM-dd' },
+            width: '33%',
+            description: 'Tylko przy blokadzie. Puste = jeden dzień.',
+            condition: (_, siblingData) => siblingData?.entryKind === 'block',
+          },
+        },
+        {
           name: 'bookingTime',
           type: 'text',
           required: true,
+          defaultValue: '08:00',
           label: 'Godzina startu (HH:MM)',
-          admin: { width: '33%' },
-        },
-        {
-          name: 'reservationEndTime',
-          type: 'text',
-          label: 'Godzina końca (HH:MM)',
           admin: { width: '33%' },
         },
       ],
     },
     {
-      name: 'durationHours',
-      type: 'number',
-      required: true,
-      defaultValue: 1,
-      label: 'Czas trwania (h)',
+      type: 'row',
+      fields: [
+        {
+          name: 'reservationEndTime',
+          type: 'text',
+          defaultValue: '20:00',
+          label: 'Godzina końca (HH:MM)',
+          admin: { width: '50%' },
+        },
+        {
+          name: 'durationHours',
+          type: 'number',
+          required: true,
+          defaultValue: 1,
+          label: 'Czas trwania (h)',
+          admin: { width: '50%' },
+        },
+      ],
     },
     {
       type: 'row',
@@ -82,7 +119,10 @@ export const Bookings: CollectionConfig = {
           defaultValue: 1,
           min: 1,
           label: 'Kierowcy (quady)',
-          admin: { width: '33%' },
+          admin: {
+            width: '33%',
+            description: 'Przy blokadzie ustaw liczbę zajętych quadów (zwykle cała pula).',
+          },
         },
         {
           name: 'passengers',
@@ -151,7 +191,7 @@ export const Bookings: CollectionConfig = {
           name: 'source',
           type: 'select',
           required: true,
-          defaultValue: 'website',
+          defaultValue: 'manual_admin',
           label: 'Źródło',
           options: [
             { label: 'Strona WWW', value: 'website' },
@@ -165,7 +205,7 @@ export const Bookings: CollectionConfig = {
           name: 'status',
           type: 'select',
           required: true,
-          defaultValue: 'pending',
+          defaultValue: 'confirmed',
           label: 'Status',
           options: [
             { label: 'Oczekująca (pending)', value: 'pending' },
@@ -278,12 +318,72 @@ export const Bookings: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      async ({ data, req }) => {
         if (!data) return data
+
+        if (data.entryKind === 'block') {
+          data.source = data.source || 'manual_admin'
+          data.status = 'confirmed'
+          data.customerFirstName = data.customerFirstName || 'Blokada'
+          data.customerLastName = data.customerLastName || 'terminu'
+          data.customerPhone = data.customerPhone || 'admin'
+          data.bookingTime = data.bookingTime || '08:00'
+          data.reservationEndTime = data.reservationEndTime || '20:00'
+          data.passengers = Number(data.passengers || 0)
+
+          if (!data.drivers || Number(data.drivers) < 1) {
+            try {
+              const settings = await req.payload.findGlobal({
+                slug: 'booking-settings',
+                overrideAccess: true,
+              })
+              data.drivers = Math.max(1, Number((settings as any)?.totalQuads || 4))
+            } catch {
+              data.drivers = 4
+            }
+          }
+
+          const start = String(data.bookingTime).slice(0, 5)
+          const end = String(data.reservationEndTime || '').slice(0, 5)
+          const [sh, sm] = start.split(':').map(Number)
+          const [eh, em] = end.split(':').map(Number)
+          if (Number.isFinite(sh) && Number.isFinite(eh)) {
+            const mins = eh * 60 + (em || 0) - (sh * 60 + (sm || 0))
+            if (mins > 0) data.durationHours = Math.max(1, Math.round((mins / 60) * 10) / 10)
+          }
+        }
+
         const drivers = Math.max(0, Number(data.drivers ?? 0))
         const passengers = Math.max(0, Number(data.passengers ?? 0))
         data.people = drivers + passengers
         return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, req, operation, previousDoc }) => {
+        if (req.context?.skipGcalSync) return doc
+        if (doc.status !== 'confirmed' && doc.status !== 'deposit_paid') return doc
+        if (doc.source === 'website' && operation === 'create') return doc
+
+        try {
+          const { upsertBookingGoogleEvent } = await import('@/lib/gcal/client')
+          const eventId = await upsertBookingGoogleEvent(doc as any)
+          if (eventId && eventId !== doc.gcalEventId) {
+            await req.payload.update({
+              collection: 'bookings',
+              id: doc.id,
+              data: { gcalEventId: eventId },
+              overrideAccess: true,
+              context: { skipGcalSync: true },
+            })
+          }
+        } catch (error) {
+          req.payload.logger.error({ err: error, msg: 'GCal sync after admin booking failed' })
+        }
+
+        // previousDoc unused — kept for Payload hook signature clarity
+        void previousDoc
+        return doc
       },
     ],
   },

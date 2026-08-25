@@ -37,8 +37,10 @@ export interface Trip {
 
 export interface Booking {
   id: number | string
+  entryKind?: 'booking' | 'block' | null
   trip?: (number | string) | Trip | null
   bookingDate: string
+  blockEndDate?: string | null
   bookingTime: string
   reservationEndTime?: string | null
   durationHours: number

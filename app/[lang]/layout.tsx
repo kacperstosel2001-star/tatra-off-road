@@ -82,7 +82,7 @@ export default async function RootLayout({
   const { lang } = await params
   const htmlLang = lang === 'en' ? 'en' : 'pl'
   const contact = await contentService.getContactInfo(htmlLang === 'en' ? 'en' : 'pl')
-  const phone = contact.phones[0] || '+48888254223'
+  const phone = contact.phones[0] || '+48530198735'
 
   const jsonLd = {
     '@context': 'https://schema.org',
