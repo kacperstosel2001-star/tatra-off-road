@@ -277,11 +277,13 @@ export async function syncGoogleCalendarDay(date: string): Promise<{
   return {
     ok: true,
     configured: listed.configured,
-    intervals: listed.events.map((event) => ({
-      start: event.startMin,
-      end: event.endMin,
-      drivers: event.drivers,
-      bookingId: event.bookingId,
-    })),
+    intervals: listed.events
+      .filter((event) => event.blocksAvailability)
+      .map((event) => ({
+        start: event.startMin,
+        end: event.endMin,
+        drivers: event.drivers,
+        bookingId: event.bookingId,
+      })),
   }
 }

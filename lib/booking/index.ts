@@ -33,7 +33,16 @@ export type CapacitySnapshot = {
 
 export type SlotAvailability = {
   time: string
+  /** Zawsze 0 lub 1 — indywidualne wycieczki, jedna rezerwacja na slot. */
   availableQuads: number
+}
+
+export type BusyInterval = {
+  start: number
+  end: number
+  drivers: number
+  /** Blokada admina (cały dzień / wiele quadów) — liczy się inaczej niż zwykła rezerwacja. */
+  isAdminBlock?: boolean
 }
 
 export function calcPrice(
@@ -177,44 +186,25 @@ function bookingInterval(booking: Booking): { start: number; end: number; driver
   return { start, end, drivers: Math.max(0, Number(booking.drivers || 0)) }
 }
 
-/**
- * Max liczba zajętych quadow w dowolnym momencie przedziału [startMin, endMin).
- * Dzięki temu 2 osobne rezerwacje 1h po 2 quady nie blokują slotu 2h jak 4 quady naraz.
- */
-export function getMaxConcurrentReserved(
+/** Indywidualne wycieczki: slot zajęty, gdy jakakolwiek rezerwacja nachodzi na [start, end). */
+export function isSlotBlocked(
   startMin: number,
   endMin: number,
-  intervals: { start: number; end: number; drivers: number }[],
-): number {
-  const points = new Set<number>([startMin])
-  for (const item of intervals) {
-    if (!rangesOverlap(startMin, endMin, item.start, item.end)) continue
-    if (item.start >= startMin && item.start < endMin) points.add(item.start)
-    if (item.end > startMin && item.end < endMin) points.add(item.end)
-  }
-
-  const sorted = [...points].sort((a, b) => a - b)
-  let maxReserved = 0
-  for (const t of sorted) {
-    let reserved = 0
-    for (const item of intervals) {
-      if (item.start <= t && t < item.end) reserved += item.drivers
-    }
-    maxReserved = Math.max(maxReserved, reserved)
-  }
-  return maxReserved
+  intervals: Pick<BusyInterval, 'start' | 'end'>[],
+): boolean {
+  return intervals.some((item) => rangesOverlap(startMin, endMin, item.start, item.end))
 }
 
 async function loadDayBusyIntervals(
   date: string,
   args: { excludeBookingId?: string | number; sessionId?: string } = {},
-): Promise<{ totalQuads: number; intervals: { start: number; end: number; drivers: number }[] }> {
+): Promise<{ totalQuads: number; intervals: BusyInterval[] }> {
   const payload = await getPayloadClient()
   const settings = await getBookingSettings()
 
   // Jedno odczytanie GCal: import do panelu + zajętość (bez podwójnego fetcha)
   let gcalOk = false
-  let gcalIntervals: { start: number; end: number; drivers: number }[] = []
+  let gcalIntervals: BusyInterval[] = []
   try {
     const { syncGoogleCalendarDay } = await import('@/lib/gcal/sync')
     const synced = await syncGoogleCalendarDay(date)
@@ -223,6 +213,7 @@ async function loadDayBusyIntervals(
       start: item.start,
       end: item.end,
       drivers: item.drivers,
+      isAdminBlock: false,
     }))
     if (synced.configured && !synced.ok) {
       console.error(
@@ -267,7 +258,7 @@ async function loadDayBusyIntervals(
     overrideAccess: true,
   })
 
-  const intervals: { start: number; end: number; drivers: number }[] = []
+  const intervals: BusyInterval[] = []
 
   for (const booking of result.docs as Booking[]) {
     const startDay = normalizeBookingDate(booking.bookingDate)
@@ -288,15 +279,9 @@ async function loadDayBusyIntervals(
       if (new Date(booking.expiresAt).getTime() < Date.now()) continue
     }
 
-    // Gdy GCal działa: rezerwacje WWW zsynchronizowane do kalendarza liczymy z GCal
-    // (żeby usunięcie eventa zwalniało slot). Importy z kalendarza / telefon / admin
-    // zawsze liczymy też z bazy — inaczej przy błędzie parsowania zostaje „dziura”.
-    if (
-      gcalOk &&
-      booking.gcalEventId &&
-      booking.source === 'website' &&
-      (booking.status === 'deposit_paid' || booking.status === 'confirmed')
-    ) {
+    // Gdy GCal działa: wpisy powiązane z eventem liczymy tylko z kalendarza
+    // (bez duplikatu z bazy; usunięcie eventa zwalnia slot).
+    if (gcalOk && booking.gcalEventId) {
       continue
     }
 
@@ -304,10 +289,18 @@ async function loadDayBusyIntervals(
     if (!interval) continue
     // Blokada bez konkretnych godzin → cały dzień
     if ((booking as any).entryKind === 'block' && (!booking.bookingTime || !booking.reservationEndTime)) {
-      intervals.push({ start: 0, end: 24 * 60, drivers: interval.drivers || settings.totalQuads })
+      intervals.push({
+        start: 0,
+        end: 24 * 60,
+        drivers: interval.drivers || settings.totalQuads,
+        isAdminBlock: true,
+      })
       continue
     }
-    intervals.push(interval)
+    intervals.push({
+      ...interval,
+      isAdminBlock: (booking as any).entryKind === 'block',
+    })
   }
 
   if (gcalOk) {
@@ -325,22 +318,21 @@ export async function getCapacitySnapshot(
 ): Promise<CapacitySnapshot> {
   const startMin = timeToMinutes(startTime)
   const endMin = timeToMinutes(endTime)
-  const { totalQuads, intervals } = await loadDayBusyIntervals(date, args)
+  const { intervals } = await loadDayBusyIntervals(date, args)
 
   if (startMin === null || endMin === null) {
-    return { total: totalQuads, reserved: totalQuads, available: 0 }
+    return { total: 1, reserved: 1, available: 0 }
   }
 
   const overlapping = intervals.filter((item) => rangesOverlap(startMin, endMin, item.start, item.end))
-  const reserved = getMaxConcurrentReserved(startMin, endMin, overlapping)
-  const available = Math.max(0, totalQuads - reserved)
-  return { total: totalQuads, reserved, available }
+  const blocked = isSlotBlocked(startMin, endMin, overlapping)
+  return { total: 1, reserved: blocked ? 1 : 0, available: blocked ? 0 : 1 }
 }
 
 export async function getAvailableSlots(
   tripId: string | number,
   date: string,
-  requestedQuads = 1,
+  _requestedQuads = 1,
   sessionId?: string,
 ): Promise<SlotAvailability[]> {
   const trip = await getTripById(tripId)
@@ -354,7 +346,7 @@ export async function getAvailableSlots(
     closeHour = 18
   }
 
-  const { totalQuads, intervals } = await loadDayBusyIntervals(date, { sessionId })
+  const { intervals } = await loadDayBusyIntervals(date, { sessionId })
   const duration = trip.durationHours > 0 ? trip.durationHours : 1
   const slots: SlotAvailability[] = []
 
@@ -370,10 +362,8 @@ export async function getAvailableSlots(
     const overlapping = intervals.filter((item) =>
       rangesOverlap(startMin, endMin, item.start, item.end),
     )
-    const reserved = getMaxConcurrentReserved(startMin, endMin, overlapping)
-    const available = Math.max(0, totalQuads - reserved)
-    if (available >= requestedQuads) {
-      slots.push({ time: startTime, availableQuads: available })
+    if (!isSlotBlocked(startMin, endMin, overlapping)) {
+      slots.push({ time: startTime, availableQuads: 1 })
     }
   }
   return slots

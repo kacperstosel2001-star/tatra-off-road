@@ -240,6 +240,8 @@ export type ParsedGcalEvent = {
   allDay: boolean
   /** Czy importować do panelu (start tego dnia / całodniowe). Busy intervals biorą wszystkie. */
   importable: boolean
+  /** Czy wydarzenie blokuje rezerwacje online (tylko REZERWACJA QUAD / powiązane z bookingiem). */
+  blocksAvailability: boolean
   date: string
   startMin: number
   endMin: number
@@ -344,9 +346,9 @@ function parseSummaryDetails(
     const quadMatch = detailsPart.match(/(\d+)\s*quad/i)
     if (quadMatch) drivers = Number(quadMatch[1])
   }
-  // Tytuł REZERWACJA bez liczby quadów = pełna blokada; zwykłe wydarzenie też
+  // Brak liczby quadów w tytule — domyślnie 1 quad (indywidualna wycieczka).
   if (!drivers) {
-    drivers = /rezerwacja\s*quad/i.test(summary) ? totalQuads : totalQuads
+    drivers = 1
   }
   drivers = Math.min(totalQuads, Math.max(1, drivers))
 
@@ -392,6 +394,20 @@ function parseSummaryDetails(
   }
 }
 
+function gcalEventBlocksAvailability(summary: string, bookingId?: string): boolean {
+  if (bookingId) return true
+  return /rezerwacja\s*quad/i.test(summary)
+}
+
+function withBlocksAvailability<T extends Omit<ParsedGcalEvent, 'blocksAvailability'>>(
+  event: T,
+): T & { blocksAvailability: boolean } {
+  return {
+    ...event,
+    blocksAvailability: gcalEventBlocksAvailability(event.summary, event.bookingId),
+  }
+}
+
 function parseEventForDate(
   event: CalendarEvent,
   date: string,
@@ -419,7 +435,7 @@ function parseEventForDate(
       titleSchedule.endMin != null &&
       titleSchedule.endMin > titleSchedule.startMin
     ) {
-      return {
+      return withBlocksAvailability({
         id: event.id,
         summary,
         description,
@@ -438,9 +454,9 @@ function parseEventForDate(
         bookingId,
         customerName,
         phone,
-      }
+      })
     }
-    return {
+    return withBlocksAvailability({
       id: event.id,
       summary,
       description,
@@ -459,7 +475,7 @@ function parseEventForDate(
       bookingId,
       customerName,
       phone,
-    }
+    })
   }
 
   if (!event.start?.dateTime || !event.end?.dateTime) {
@@ -470,7 +486,7 @@ function parseEventForDate(
       titleSchedule.endMin != null &&
       titleSchedule.endMin > titleSchedule.startMin
     ) {
-      return {
+      return withBlocksAvailability({
         id: event.id,
         summary,
         description,
@@ -489,7 +505,7 @@ function parseEventForDate(
         bookingId,
         customerName,
         phone,
-      }
+      })
     }
     return null
   }
@@ -530,7 +546,7 @@ function parseEventForDate(
     (titleSchedule.date ? titleSchedule.date === date : startLocal.date === date) ||
     startLocal.date === date
 
-  return {
+  return withBlocksAvailability({
     id: event.id,
     summary,
     description,
@@ -549,7 +565,7 @@ function parseEventForDate(
     bookingId,
     customerName,
     phone,
-  }
+  })
 }
 
 async function fetchCalendarEventsInRange(
@@ -677,13 +693,15 @@ export async function listGoogleCalendarBusyIntervals(
   const listed = await listGoogleCalendarDayEvents(date, totalQuads)
   if (!listed.ok) return { configured: listed.configured, ok: false, intervals: [] }
 
-  const intervals: GcalBusyInterval[] = listed.events.map((event) => ({
-    start: event.startMin,
-    end: event.endMin,
-    drivers: event.drivers,
-    bookingId: event.bookingId,
-    source: 'gcal' as const,
-  }))
+  const intervals: GcalBusyInterval[] = listed.events
+    .filter((event) => event.blocksAvailability)
+    .map((event) => ({
+      start: event.startMin,
+      end: event.endMin,
+      drivers: event.drivers,
+      bookingId: event.bookingId,
+      source: 'gcal' as const,
+    }))
 
   return { configured: listed.configured, ok: true, intervals }
 }

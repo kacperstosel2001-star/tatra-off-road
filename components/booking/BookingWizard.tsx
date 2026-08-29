@@ -487,7 +487,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                     >
                       <strong className="font-display text-[22px] leading-none">{slot.time}</strong>
                       <span className="text-[11px] uppercase tracking-[0.06em] text-stone mt-1">
-                        {ui.freeQuads}: {slot.availableQuads}
+                        {ui.freeQuads}
                       </span>
                     </button>
                   ))}

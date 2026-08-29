@@ -73,13 +73,10 @@ export async function POST(request: Request) {
     }
 
     const capacity = await getCapacitySnapshot(date, time, endTime, { sessionId })
-    if (capacity.available < drivers) {
+    if (capacity.available < 1) {
       return NextResponse.json(
         {
-          message:
-            capacity.available > 0
-              ? `W tym przedziale zostało tylko ${capacity.available} wolnych quadów.`
-              : 'W tym przedziale nie ma już wolnych quadów.',
+          message: 'Ten termin jest już zajęty. Wybierz inną godzinę lub zadzwoń.',
           slotTaken: true,
         },
         { status: 409 },

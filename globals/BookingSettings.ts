@@ -21,7 +21,7 @@ export const BookingSettings: GlobalConfig = {
       label: 'Łączna liczba quadow',
       admin: {
         description:
-          'Pula pojazdów. Rezerwacje mogą się nakładać częściowo — system liczy wolne quady w każdym momencie (np. 3 zajęte = 1 wolny na 1h lub 2h).',
+          'Używane przy blokadach admina (np. zamknięcie całego dnia). Rezerwacje online to indywidualne wycieczki — jedna grupa na dany start godziny.',
       },
     },
     {
