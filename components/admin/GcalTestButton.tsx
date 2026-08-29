@@ -68,8 +68,8 @@ export function GcalTestButton() {
     <div style={{ marginTop: 8, marginBottom: 16 }}>
       <p style={{ marginBottom: 10, opacity: 0.8, fontSize: 13 }}>
         Zapisz ustawienia (Calendar ID + JSON), przetestuj połączenie, potem zsynchronizuj
-        wcześniejsze wydarzenia z Google do listy Rezerwacje. Synchronizacja blokuje też wolne
-        godziny na stronie (ręczny wpis = pełna pula; w tytule „3 quady” = 3 zajęte).
+        wydarzenia z Google do listy Rezerwacje. Usunięcie w kalendarzu usuwa też wpis w panelu
+        (przy sprawdzaniu terminów lub po kliknięciu synchronizacji).
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         <Button type="button" buttonStyle="secondary" disabled={busy} onClick={onTest}>

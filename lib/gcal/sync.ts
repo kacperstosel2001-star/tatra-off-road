@@ -1,13 +1,139 @@
 import { getPayloadClient, getBookingSettings, calculateDurationHoursFromRange } from '@/lib/booking'
 import {
+  fetchGoogleCalendarDayItems,
+  fetchGoogleCalendarRangeItems,
   listGoogleCalendarDayEvents,
   listGoogleCalendarEventsInRange,
   type ParsedGcalEvent,
 } from '@/lib/gcal/client'
+import type { Booking } from '@/payload-types'
 
 function isEnumSourceError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error || '')
   return /google_calendar|enum_bookings_source|invalid input value for enum/i.test(message)
+}
+
+/**
+ * GCal usunięty / anulowany → usuń import z panelu lub anuluj rezerwację WWW.
+ */
+export async function removeBookingForGcalEvent(
+  eventId: string,
+): Promise<'deleted' | 'cancelled' | 'missing'> {
+  const id = String(eventId || '').trim()
+  if (!id) return 'missing'
+
+  const payload = await getPayloadClient()
+  const found = await payload.find({
+    collection: 'bookings',
+    where: { gcalEventId: { equals: id } },
+    limit: 1,
+    overrideAccess: true,
+  })
+  const booking = found.docs[0] as Booking | undefined
+  if (!booking) return 'missing'
+
+  const keepRecord =
+    booking.source === 'website' ||
+    booking.source === 'manual_admin' ||
+    booking.paymentStatus === 'deposit_paid' ||
+    booking.status === 'deposit_paid'
+
+  if (keepRecord) {
+    await payload.update({
+      collection: 'bookings',
+      id: booking.id,
+      data: {
+        status: 'cancelled',
+        gcalEventId: null,
+        expiresAt: null,
+      },
+      overrideAccess: true,
+    })
+    return 'cancelled'
+  }
+
+  await payload.delete({
+    collection: 'bookings',
+    id: booking.id,
+    overrideAccess: true,
+  })
+  return 'deleted'
+}
+
+async function purgeDeletedGcalBookingsForDay(date: string, totalQuads: number): Promise<number> {
+  const raw = await fetchGoogleCalendarDayItems(date)
+  if (!raw.ok) return 0
+
+  const listed = await listGoogleCalendarDayEvents(date, totalQuads)
+  const activeIds = new Set(listed.events.map((event) => event.id))
+  const allFetchedIds = new Set(
+    raw.items.map((item) => String(item.id || '').trim()).filter(Boolean),
+  )
+
+  let removed = 0
+  for (const item of raw.items) {
+    if (item.id && item.status === 'cancelled') {
+      const result = await removeBookingForGcalEvent(item.id)
+      if (result !== 'missing') removed += 1
+    }
+  }
+
+  const payload = await getPayloadClient()
+  const linked = await payload.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { gcalEventId: { exists: true } },
+        { bookingDate: { greater_than_equal: `${date}T00:00:00.000Z` } },
+        { bookingDate: { less_than_equal: `${date}T23:59:59.999Z` } },
+      ],
+    },
+    limit: 200,
+    overrideAccess: true,
+  })
+
+  for (const booking of linked.docs as Booking[]) {
+    const eventId = String(booking.gcalEventId || '').trim()
+    if (!eventId || activeIds.has(eventId)) continue
+    if (!allFetchedIds.has(eventId)) {
+      const result = await removeBookingForGcalEvent(eventId)
+      if (result !== 'missing') removed += 1
+    }
+  }
+
+  return removed
+}
+
+async function purgeDeletedGcalBookingsInRange(
+  fromDate: string,
+  toDate: string,
+  activeEventIds: Set<string>,
+  allFetchedIds: Set<string>,
+): Promise<number> {
+  const payload = await getPayloadClient()
+  const linked = await payload.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { gcalEventId: { exists: true } },
+        { bookingDate: { greater_than_equal: `${fromDate}T00:00:00.000Z` } },
+        { bookingDate: { less_than_equal: `${toDate}T23:59:59.999Z` } },
+      ],
+    },
+    limit: 500,
+    overrideAccess: true,
+  })
+
+  let removed = 0
+  for (const booking of linked.docs as Booking[]) {
+    const eventId = String(booking.gcalEventId || '').trim()
+    if (!eventId || activeEventIds.has(eventId)) continue
+    if (!allFetchedIds.has(eventId)) {
+      const result = await removeBookingForGcalEvent(eventId)
+      if (result !== 'missing') removed += 1
+    }
+  }
+  return removed
 }
 
 export async function upsertGcalParsedEvent(event: ParsedGcalEvent, totalQuads: number) {
@@ -161,6 +287,7 @@ export type GcalSyncResult = {
   created: number
   updated: number
   linked: number
+  removed: number
   skipped: number
   days: number
   errors?: string[]
@@ -202,6 +329,7 @@ export async function syncGoogleCalendarBookings(args?: {
       created: 0,
       updated: 0,
       linked: 0,
+      removed: 0,
       skipped: 0,
       days: 0,
     }
@@ -213,16 +341,38 @@ export async function syncGoogleCalendarBookings(args?: {
       created: 0,
       updated: 0,
       linked: 0,
+      removed: 0,
       skipped: 0,
       days: 0,
     }
   }
 
+  const raw = await fetchGoogleCalendarRangeItems(fromDate, toDate)
+  const activeEventIds = new Set(listed.events.map((event) => event.id))
+  const allFetchedIds = new Set(
+    (raw.items || []).map((item) => String(item.id || '').trim()).filter(Boolean),
+  )
+
   let created = 0
   let updated = 0
   let linked = 0
+  let removed = 0
   let skipped = 0
   const errors: string[] = []
+
+  if (raw.ok) {
+    for (const item of raw.items) {
+      if (item.id && item.status === 'cancelled') {
+        try {
+          const result = await removeBookingForGcalEvent(item.id)
+          if (result !== 'missing') removed += 1
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error)
+          errors.push(`Usunięcie ${item.id}: ${msg}`)
+        }
+      }
+    }
+  }
 
   for (const event of listed.events) {
     try {
@@ -239,15 +389,30 @@ export async function syncGoogleCalendarBookings(args?: {
     }
   }
 
+  if (raw.ok) {
+    try {
+      removed += await purgeDeletedGcalBookingsInRange(
+        fromDate,
+        toDate,
+        activeEventIds,
+        allFetchedIds,
+      )
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+      errors.push(`Czyszczenie usuniętych: ${msg}`)
+    }
+  }
+
   const errorHint =
     errors.length > 0 ? ` Błędy: ${errors.slice(0, 3).join(' | ')}${errors.length > 3 ? '…' : ''}` : ''
 
   return {
     ok: errors.length === 0,
-    message: `Kalendarz ${fromDate} → ${toDate}: znaleziono ${listed.events.length}, +${created} nowych, ${updated} zaktualizowanych, ${linked} powiązanych, ${skipped} pominiętych.${errorHint}`,
+    message: `Kalendarz ${fromDate} → ${toDate}: znaleziono ${listed.events.length}, +${created} nowych, ${updated} zaktualizowanych, ${linked} powiązanych, ${removed} usuniętych z panelu, ${skipped} pominiętych.${errorHint}`,
     created,
     updated,
     linked,
+    removed,
     skipped,
     days: daysBack + daysForward + 1,
     errors: errors.length ? errors : undefined,
@@ -264,6 +429,12 @@ export async function syncGoogleCalendarDay(date: string): Promise<{
   const listed = await listGoogleCalendarDayEvents(date, settings.totalQuads)
   if (!listed.ok) {
     return { ok: false, configured: listed.configured, intervals: [] }
+  }
+
+  try {
+    await purgeDeletedGcalBookingsForDay(date, settings.totalQuads)
+  } catch (error) {
+    console.error('GCal day purge failed', date, error)
   }
 
   for (const event of listed.events) {

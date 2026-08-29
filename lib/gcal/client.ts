@@ -588,6 +588,7 @@ async function fetchCalendarEventsInRange(
       singleEvents: 'true',
       orderBy: 'startTime',
       maxResults: '250',
+      showDeleted: 'true',
     })
     if (pageToken) params.set('pageToken', pageToken)
 
@@ -622,6 +623,27 @@ async function fetchCalendarEvents(date: string): Promise<{
   const paddedMin = new Date(`${date}T00:00:00Z`)
   paddedMin.setUTCHours(paddedMin.getUTCHours() - 14)
   const paddedMax = new Date(`${date}T00:00:00Z`)
+  paddedMax.setUTCHours(paddedMax.getUTCHours() + 38)
+  return fetchCalendarEventsInRange(paddedMin.toISOString(), paddedMax.toISOString())
+}
+
+/** Surowe wydarzenia z kalendarza na dany dzień (z anulowanymi / usuniętymi). */
+export async function fetchGoogleCalendarDayItems(date: string): Promise<{
+  configured: boolean
+  ok: boolean
+  items: CalendarEvent[]
+}> {
+  return fetchCalendarEvents(date)
+}
+
+/** Surowe wydarzenia z kalendarza w zakresie dat (z anulowanymi / usuniętymi). */
+export async function fetchGoogleCalendarRangeItems(
+  fromDate: string,
+  toDate: string,
+): Promise<{ configured: boolean; ok: boolean; items: CalendarEvent[] }> {
+  const paddedMin = new Date(`${fromDate}T00:00:00Z`)
+  paddedMin.setUTCHours(paddedMin.getUTCHours() - 14)
+  const paddedMax = new Date(`${toDate}T00:00:00Z`)
   paddedMax.setUTCHours(paddedMax.getUTCHours() + 38)
   return fetchCalendarEventsInRange(paddedMin.toISOString(), paddedMax.toISOString())
 }
