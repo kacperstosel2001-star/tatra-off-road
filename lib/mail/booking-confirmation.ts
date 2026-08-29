@@ -1,33 +1,19 @@
 import { getPayloadClient } from '@/lib/booking'
+import { sendBookingAdminNotificationEmail } from '@/lib/mail/booking-admin-notification'
+import {
+  bookingWhen,
+  customerName,
+  emailRow,
+  escapeHtml,
+  tripName,
+} from '@/lib/mail/booking-email-shared'
 import { sendMail, isMailConfigured } from '@/lib/mail/send'
-import type { Booking, Trip } from '@/payload-types'
-
-function formatDatePl(value: string | null | undefined): string {
-  if (!value) return '—'
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value).slice(0, 10)
-  return d.toLocaleDateString('pl-PL', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'Europe/Warsaw',
-  })
-}
-
-function tripName(booking: Booking): string {
-  if (booking.trip && typeof booking.trip === 'object') {
-    return String((booking.trip as Trip).name || 'Wyprawa quadowa')
-  }
-  return 'Wyprawa quadowa'
-}
+import type { Booking } from '@/payload-types'
 
 function buildConfirmationContent(booking: Booking) {
-  const date = formatDatePl(booking.bookingDate)
-  const start = String(booking.bookingTime || '').slice(0, 5)
-  const end = booking.reservationEndTime ? String(booking.reservationEndTime).slice(0, 5) : ''
-  const when = end ? `${date}, ${start}–${end}` : `${date}, ${start}`
-  const name = [booking.customerFirstName, booking.customerLastName].filter(Boolean).join(' ') || 'Kliencie'
+  const when = bookingWhen(booking)
+  const name = customerName(booking)
+  const displayName = name === '—' ? 'Kliencie' : name
   const deposit = booking.depositAmount ?? 0
   const remaining = booking.remainingAmount ?? 0
   const total = booking.fullPrice ?? 0
@@ -39,7 +25,7 @@ function buildConfirmationContent(booking: Booking) {
   const subject = `Potwierdzenie rezerwacji #${booking.id} — Tatra Off-Road`
 
   const text = [
-    `Cześć ${name},`,
+    `Cześć ${displayName},`,
     '',
     'Dziękujemy — zaliczka została opłacona. Rezerwacja jest potwierdzona.',
     '',
@@ -79,16 +65,16 @@ function buildConfirmationContent(booking: Booking) {
           </tr>
           <tr>
             <td style="padding:24px;">
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Cześć ${escapeHtml(name)},</p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.5;">Cześć ${escapeHtml(displayName)},</p>
               <p style="margin:0 0 20px;font-size:15px;line-height:1.5;">Dziękujemy — zaliczka została opłacona. Rezerwacja jest potwierdzona.</p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:14px;line-height:1.5;border-top:1px solid #eee;">
-                ${row('Numer', `#${booking.id}`)}
-                ${row('Wyprawa', tripName(booking))}
-                ${row('Termin', when)}
-                ${row('Uczestnicy', `${drivers} kier. / ${passengers} pas.`)}
-                ${row('Zaliczka', `${deposit} zł`)}
-                ${row('Reszta na miejscu', `${remaining} zł`)}
-                ${row('Razem', `${total} zł`)}
+                ${emailRow('Numer', `#${booking.id}`)}
+                ${emailRow('Wyprawa', tripName(booking))}
+                ${emailRow('Termin', when)}
+                ${emailRow('Uczestnicy', `${drivers} kier. / ${passengers} pas.`)}
+                ${emailRow('Zaliczka', `${deposit} zł`)}
+                ${emailRow('Reszta na miejscu', `${remaining} zł`)}
+                ${emailRow('Razem', `${total} zł`)}
               </table>
               <div style="margin:24px 0;padding:16px;background:#f5f1e7;border-left:4px solid #e87722;">
                 <p style="margin:0 0 8px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Ważne przed przyjazdem</p>
@@ -111,21 +97,6 @@ function buildConfirmationContent(booking: Booking) {
   return { subject, text, html }
 }
 
-function row(label: string, value: string) {
-  return `<tr>
-    <td style="padding:10px 0;border-bottom:1px solid #eee;color:#6b6558;">${escapeHtml(label)}</td>
-    <td style="padding:10px 0;border-bottom:1px solid #eee;text-align:right;font-weight:700;">${escapeHtml(value)}</td>
-  </tr>`
-}
-
-function escapeHtml(value: string) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 /**
  * Sends customer confirmation once after deposit is paid.
  * Safe to call from CashBill notify and return sync.
@@ -137,7 +108,7 @@ export async function sendBookingConfirmationEmail(bookingInput: Booking): Promi
     return
   }
 
-  if ((bookingInput as any).confirmationEmailSentAt) return
+  if (bookingInput.confirmationEmailSentAt) return
 
   if (!isMailConfigured()) {
     console.warn(
@@ -147,7 +118,6 @@ export async function sendBookingConfirmationEmail(bookingInput: Booking): Promi
   }
 
   const payload = await getPayloadClient()
-  // Re-read to avoid duplicate sends under concurrent notify + sync
   const booking = (await payload.findByID({
     collection: 'bookings',
     id: bookingInput.id,
@@ -155,7 +125,7 @@ export async function sendBookingConfirmationEmail(bookingInput: Booking): Promi
     overrideAccess: true,
   })) as Booking
 
-  if ((booking as any).confirmationEmailSentAt) return
+  if (booking.confirmationEmailSentAt) return
   if (booking.paymentStatus !== 'deposit_paid' && booking.status !== 'deposit_paid') return
 
   const content = buildConfirmationContent(booking)
@@ -172,10 +142,83 @@ export async function sendBookingConfirmationEmail(bookingInput: Booking): Promi
     await payload.update({
       collection: 'bookings',
       id: booking.id,
-      data: { confirmationEmailSentAt: new Date().toISOString() } as any,
+      data: { confirmationEmailSentAt: new Date().toISOString() },
       overrideAccess: true,
     })
   } catch (error) {
     console.error('Failed to mark confirmationEmailSentAt', error)
+  }
+}
+
+/** Customer + admin emails after deposit is paid. */
+export async function sendBookingPaidEmails(booking: Booking): Promise<void> {
+  await Promise.all([
+    sendBookingConfirmationEmail(booking),
+    sendBookingAdminNotificationEmail(booking),
+  ])
+}
+
+export async function sendCustomerConfirmationTestMail(
+  to: string,
+): Promise<{ ok: boolean; message: string }> {
+  const target = String(to || '').trim()
+  if (!target || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) {
+    return { ok: false, message: 'Podaj prawidłowy adres e-mail do testu.' }
+  }
+
+  if (!isMailConfigured()) {
+    return { ok: false, message: 'SMTP nie jest skonfigurowane w Environment Variables.' }
+  }
+
+  const now = new Date().toISOString()
+  const booking: Booking = {
+    id: 'TEST',
+    bookingDate: now,
+    bookingTime: '09:00',
+    reservationEndTime: '11:00',
+    durationHours: 2,
+    drivers: 1,
+    passengers: 1,
+    customerFirstName: 'Jan',
+    customerLastName: 'Kowalski',
+    customerPhone: '+48 500 000 000',
+    customerEmail: target,
+    source: 'website',
+    status: 'deposit_paid',
+    paymentStatus: 'deposit_paid',
+    fullPrice: 500,
+    depositAmount: 50,
+    remainingAmount: 450,
+    trip: {
+      id: 0,
+      name: 'Wyprawa testowa',
+      durationHours: 2,
+      price1: 500,
+      price2: 0,
+      deposit: 50,
+      updatedAt: now,
+      createdAt: now,
+    },
+    updatedAt: now,
+    createdAt: now,
+  }
+
+  const content = buildConfirmationContent(booking)
+  const result = await sendMail({
+    to: target,
+    subject: `[TEST] ${content.subject}`,
+    text: `[TEST — przykładowa rezerwacja]\n\n${content.text}`,
+    html: `<p style="margin:0 0 16px;padding:12px;background:#fef3c7;border-left:4px solid #f59e0b;font-family:Arial,sans-serif;font-size:14px;"><strong>TEST</strong> — to jest przykładowe potwierdzenie dla klienta.</p>${content.html}`,
+  })
+
+  if (result.ok) {
+    return {
+      ok: true,
+      message: `Wysłano test potwierdzenia klienta na ${target}. Sprawdź skrzynkę (i spam).`,
+    }
+  }
+  return {
+    ok: false,
+    message: result.skipped ? 'SMTP nie jest skonfigurowane.' : `Nie wysłano: ${result.error || 'nieznany błąd'}`,
   }
 }

@@ -64,6 +64,7 @@ export interface Booking {
   sessionId?: string | null
   gcalEventId?: string | null
   confirmationEmailSentAt?: string | null
+  adminNotificationEmailSentAt?: string | null
   expiresAt?: string | null
   updatedAt: string
   createdAt: string
@@ -81,6 +82,7 @@ export interface BookingSetting {
   cashbillSecret?: string | null
   gcalCalendarId?: string | null
   gcalServiceAccountJson?: string | null
+  bookingNotificationEmail?: string | null
   updatedAt: string
   createdAt: string
 }

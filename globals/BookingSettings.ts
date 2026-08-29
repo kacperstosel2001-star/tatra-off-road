@@ -117,6 +117,15 @@ export const BookingSettings: GlobalConfig = {
       admin: { initCollapsed: false },
       fields: [
         {
+          name: 'bookingNotificationEmail',
+          type: 'email',
+          label: 'E-mail powiadomień admina',
+          admin: {
+            description:
+              'Na ten adres wysyłamy powiadomienie o nowej opłaconej rezerwacji (obok maila do klienta). Zapisz ustawienia przed testem.',
+          },
+        },
+        {
           name: 'smtpInfo',
           type: 'ui',
           admin: {

@@ -307,6 +307,16 @@ export const Bookings: CollectionConfig = {
       },
     },
     {
+      name: 'adminNotificationEmailSentAt',
+      type: 'date',
+      label: 'Powiadomienie admina wysłane',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+    },
+    {
       name: 'expiresAt',
       type: 'date',
       label: 'Wygasa',

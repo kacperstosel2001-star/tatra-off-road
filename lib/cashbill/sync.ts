@@ -2,7 +2,7 @@ import { getPayloadClient } from '@/lib/booking'
 import { getCashBillClient } from '@/lib/cashbill/config'
 import { extractPaymentStatus, isFailedStatus, isPaidStatus } from '@/lib/cashbill/client'
 import { upsertBookingGoogleEvent } from '@/lib/gcal/client'
-import { sendBookingConfirmationEmail } from '@/lib/mail/booking-confirmation'
+import { sendBookingPaidEmails } from '@/lib/mail/booking-confirmation'
 import type { Booking } from '@/payload-types'
 
 export type SyncPaymentResult = {
@@ -35,7 +35,7 @@ async function ensureGoogleCalendarEvent(booking: Booking): Promise<Booking> {
 async function afterDepositPaid(booking: Booking): Promise<Booking> {
   booking = await ensureGoogleCalendarEvent(booking)
   try {
-    await sendBookingConfirmationEmail(booking)
+    await sendBookingPaidEmails(booking)
   } catch (error) {
     console.error('Confirmation email after payment failed', error)
   }

@@ -2,11 +2,10 @@ import { NextResponse } from 'next/server'
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import {
-  getMailConfigSummary,
-  sendTestMail,
-  verifyMailConnection,
-} from '@/lib/mail/send'
+import { sendAdminNotificationTestMail } from '@/lib/mail/booking-admin-notification'
+import { sendCustomerConfirmationTestMail } from '@/lib/mail/booking-confirmation'
+import { getBookingNotificationAdminEmail } from '@/lib/mail/booking-settings-mail'
+import { getMailConfigSummary, verifyMailConnection } from '@/lib/mail/send'
 
 async function requireAdmin() {
   const payload = await getPayload({ config })
@@ -24,10 +23,12 @@ export async function GET() {
         { status: 401 },
       )
     }
+    const adminNotificationEmail = await getBookingNotificationAdminEmail()
     return NextResponse.json({
       ok: true,
       message: 'Status SMTP',
       config: getMailConfigSummary(),
+      adminNotificationEmail,
     })
   } catch (error) {
     return NextResponse.json(
@@ -49,18 +50,32 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}))
     const action = String(body.action || 'verify')
-    const config = getMailConfigSummary()
+    const smtpConfig = getMailConfigSummary()
+    const adminNotificationEmail = await getBookingNotificationAdminEmail()
 
-    if (action === 'send') {
-      const result = await sendTestMail(String(body.to || user.email || ''))
+    if (action === 'send_customer') {
+      const result = await sendCustomerConfirmationTestMail(String(body.to || user.email || ''))
       return NextResponse.json(
-        { ...result, config },
+        { ...result, config: smtpConfig, adminNotificationEmail },
+        { status: result.ok ? 200 : 400 },
+      )
+    }
+
+    if (action === 'send_admin') {
+      const result = await sendAdminNotificationTestMail(
+        String(body.to || adminNotificationEmail || ''),
+      )
+      return NextResponse.json(
+        { ...result, config: smtpConfig, adminNotificationEmail },
         { status: result.ok ? 200 : 400 },
       )
     }
 
     const result = await verifyMailConnection()
-    return NextResponse.json({ ...result, config }, { status: result.ok ? 200 : 400 })
+    return NextResponse.json(
+      { ...result, config: smtpConfig, adminNotificationEmail },
+      { status: result.ok ? 200 : 400 },
+    )
   } catch (error) {
     console.error('Mail test', error)
     return NextResponse.json(
