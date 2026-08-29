@@ -83,9 +83,15 @@ export const Bookings: CollectionConfig = {
           name: 'bookingTime',
           type: 'text',
           required: true,
-          defaultValue: '08:00',
-          label: 'Godzina startu (HH:MM)',
-          admin: { width: '33%' },
+          defaultValue: '09:00',
+          label: 'Godzina startu',
+          admin: {
+            width: '33%',
+            description: 'Wybierz kafelek — koniec wyliczy się z wyprawy.',
+            components: {
+              Field: '/components/admin/BookingTimePicker#BookingTimePicker',
+            },
+          },
         },
       ],
     },
@@ -96,8 +102,12 @@ export const Bookings: CollectionConfig = {
           name: 'reservationEndTime',
           type: 'text',
           defaultValue: '20:00',
-          label: 'Godzina końca (HH:MM)',
-          admin: { width: '50%' },
+          label: 'Godzina końca',
+          admin: {
+            width: '50%',
+            description: 'Przy rezerwacji klienta ustawiana automatycznie z wyprawy.',
+            condition: (_, siblingData) => siblingData?.entryKind === 'block',
+          },
         },
         {
           name: 'durationHours',
@@ -105,7 +115,10 @@ export const Bookings: CollectionConfig = {
           required: true,
           defaultValue: 1,
           label: 'Czas trwania (h)',
-          admin: { width: '50%' },
+          admin: {
+            width: '50%',
+            condition: (_, siblingData) => siblingData?.entryKind === 'block',
+          },
         },
       ],
     },
@@ -331,6 +344,35 @@ export const Bookings: CollectionConfig = {
       async ({ data, req }) => {
         if (!data) return data
 
+        const { calculateEndTime } = await import('@/lib/booking')
+
+        if (data.entryKind === 'booking') {
+          data.bookingTime = String(data.bookingTime || '09:00').slice(0, 5)
+
+          let duration = Number(data.durationHours || 0)
+          if (data.trip) {
+            try {
+              const tripId =
+                typeof data.trip === 'object' && data.trip !== null && 'id' in data.trip
+                  ? (data.trip as { id: string | number }).id
+                  : data.trip
+              const trip = await req.payload.findByID({
+                collection: 'trips',
+                id: tripId as string | number,
+                overrideAccess: true,
+              })
+              duration = Math.max(1, Number((trip as { durationHours?: number }).durationHours || 1))
+            } catch {
+              duration = duration > 0 ? duration : 1
+            }
+          }
+          if (duration <= 0) duration = 1
+
+          data.durationHours = duration
+          const end = calculateEndTime(String(data.bookingTime).slice(0, 5), duration)
+          if (end) data.reservationEndTime = end
+        }
+
         if (data.entryKind === 'block') {
           data.source = data.source || 'manual_admin'
           data.status = 'confirmed'
@@ -372,8 +414,17 @@ export const Bookings: CollectionConfig = {
     afterChange: [
       async ({ doc, req, operation, previousDoc }) => {
         if (req.context?.skipGcalSync) return doc
-        if (doc.status !== 'confirmed' && doc.status !== 'deposit_paid') return doc
+        if (doc.status === 'cancelled' || doc.status === 'expired') return doc
         if (doc.source === 'website' && operation === 'create') return doc
+
+        const syncManual =
+          doc.source === 'manual_admin' ||
+          doc.source === 'phone' ||
+          doc.entryKind === 'block'
+        const syncPaidOrConfirmed =
+          doc.status === 'confirmed' || doc.status === 'deposit_paid'
+
+        if (!syncManual && !syncPaidOrConfirmed) return doc
 
         try {
           const { upsertBookingGoogleEvent } = await import('@/lib/gcal/client')
