@@ -1,10 +1,7 @@
 import { applyInitialSchema } from './lib/db/ensure-schema'
 
-console.log('[tatra] applying postgres schema...')
-applyInitialSchema()
-  .then(() => {
-    console.log('[tatra] postgres schema ready')
-  })
-  .catch((error) => {
-    console.error('[tatra] postgres schema failed', error)
-  })
+export async function runNodeInstrumentation() {
+  console.log('[tatra] applying postgres schema...')
+  await applyInitialSchema()
+  console.log('[tatra] postgres schema ready')
+}

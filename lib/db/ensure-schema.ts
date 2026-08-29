@@ -210,11 +210,22 @@ async function ensureBookingEmailColumn(client: pg.Client) {
   )
   await runIgnore(
     client,
+    `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS admin_notification_email_sent_at timestamp with time zone`,
+  )
+  await runIgnore(
+    client,
     `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS entry_kind character varying DEFAULT 'booking'`,
   )
   await runIgnore(
     client,
     `ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS block_end_date timestamp with time zone`,
+  )
+}
+
+async function ensureBookingSettingsColumns(client: pg.Client) {
+  await runIgnore(
+    client,
+    `ALTER TABLE public.booking_settings ADD COLUMN IF NOT EXISTS booking_notification_email character varying`,
   )
 }
 
@@ -244,6 +255,7 @@ async function repairExistingSchema(client: pg.Client) {
   await applyDumpConstraints(client)
   await ensureAllPrimaryKeys(client)
   await ensureBookingEmailColumn(client)
+  await ensureBookingSettingsColumns(client)
   await ensureBookingsSourceEnum(client)
   await markMigration(client)
 }

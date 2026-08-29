@@ -122,54 +122,63 @@ function sampleBooking(): Booking {
  * Sends admin notification once after deposit is paid.
  */
 export async function sendBookingAdminNotificationEmail(bookingInput: Booking): Promise<void> {
-  if ((bookingInput as Booking & { adminNotificationEmailSentAt?: string }).adminNotificationEmailSentAt) return
-
-  const to = await getBookingNotificationAdminEmail()
-  if (!to) {
-    console.warn(
-      `Admin notification skipped for booking #${bookingInput.id}: set bookingNotificationEmail in Rezerwacje → ustawienia`,
-    )
-    return
-  }
-
-  if (!isMailConfigured()) {
-    console.warn(
-      `Admin notification skipped for booking #${bookingInput.id}: configure SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM`,
-    )
-    return
-  }
-
-  const payload = await getPayloadClient()
-  const booking = (await payload.findByID({
-    collection: 'bookings',
-    id: bookingInput.id,
-    depth: 1,
-    overrideAccess: true,
-  })) as Booking
-
-  if ((booking as Booking & { adminNotificationEmailSentAt?: string }).adminNotificationEmailSentAt) return
-  if (booking.paymentStatus !== 'deposit_paid' && booking.status !== 'deposit_paid') return
-
-  const content = buildAdminNotificationContent(booking)
-  const result = await sendMail({
-    to,
-    subject: content.subject,
-    text: content.text,
-    html: content.html,
-    replyTo: String(booking.customerEmail || '').trim() || undefined,
-  })
-
-  if (!result.ok) return
-
   try {
-    await payload.update({
-      collection: 'bookings',
-      id: booking.id,
-      data: { adminNotificationEmailSentAt: new Date().toISOString() } as Record<string, string>,
-      overrideAccess: true,
+    if (bookingInput.adminNotificationEmailSentAt) return
+
+    const to = await getBookingNotificationAdminEmail()
+    if (!to) {
+      console.warn(
+        `Admin notification skipped for booking #${bookingInput.id}: set bookingNotificationEmail in Rezerwacje → ustawienia`,
+      )
+      return
+    }
+
+    if (!isMailConfigured()) {
+      console.warn(
+        `Admin notification skipped for booking #${bookingInput.id}: configure SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM`,
+      )
+      return
+    }
+
+    const payload = await getPayloadClient()
+    let booking = bookingInput
+    try {
+      booking = (await payload.findByID({
+        collection: 'bookings',
+        id: bookingInput.id,
+        depth: 1,
+        overrideAccess: true,
+      })) as Booking
+    } catch (error) {
+      console.error('Admin notification: re-read booking failed, using input snapshot', error)
+    }
+
+    if (booking.adminNotificationEmailSentAt) return
+    if (booking.paymentStatus !== 'deposit_paid' && booking.status !== 'deposit_paid') return
+
+    const content = buildAdminNotificationContent(booking)
+    const result = await sendMail({
+      to,
+      subject: content.subject,
+      text: content.text,
+      html: content.html,
+      replyTo: String(booking.customerEmail || '').trim() || undefined,
     })
+
+    if (!result.ok) return
+
+    try {
+      await payload.update({
+        collection: 'bookings',
+        id: booking.id,
+        data: { adminNotificationEmailSentAt: new Date().toISOString() },
+        overrideAccess: true,
+      })
+    } catch (error) {
+      console.error('Failed to mark adminNotificationEmailSentAt', error)
+    }
   } catch (error) {
-    console.error('Failed to mark adminNotificationEmailSentAt', error)
+    console.error(`Admin notification failed for booking #${bookingInput.id}`, error)
   }
 }
 
