@@ -9,6 +9,9 @@ import { sendBookingPaidEmails } from '@/lib/mail/booking-confirmation'
  * CashBill notification endpoint.
  * Configure in CashBill panel as:
  *   https://YOUR_DOMAIN/api/payments/cashbill/notify
+ *
+ * Ważne: wyłącz ochronę Cloudflare / Bot Fight Mode dla tej ścieżki,
+ * inaczej powiadomienia nie dochodzą i rezerwacja zostaje „oczekująca”.
  */
 async function handleNotify(request: Request) {
   const url = new URL(request.url)
@@ -32,11 +35,13 @@ async function handleNotify(request: Request) {
   }
 
   if (!cmd || !args || !sign) {
+    console.warn('CashBill notify: missing parameters', { cmd: Boolean(cmd), args: Boolean(args), sign: Boolean(sign) })
     return new NextResponse('Missing parameters', { status: 400 })
   }
 
   const { client, cfg } = await getCashBillClient()
   if (!verifyNotificationSign(cmd, args, sign, cfg.secret)) {
+    console.warn('CashBill notify: invalid signature', { cmd, args, mode: cfg.mode, shopId: cfg.shopId })
     return new NextResponse('Invalid signature', { status: 401 })
   }
 
@@ -46,52 +51,77 @@ async function handleNotify(request: Request) {
 
   const payment = await client.getPayment(args)
   const status = extractPaymentStatus(payment)
+  console.log('CashBill notify', {
+    paymentId: payment.id,
+    status,
+    additionalData: payment.additionalData,
+    mode: cfg.mode,
+  })
+
   const payload = await getPayloadClient()
 
-  const bookingIdFromAdditional = payment.additionalData ? String(payment.additionalData) : ''
+  const bookingIdFromAdditional = payment.additionalData ? String(payment.additionalData).trim() : ''
   const found = await payload.find({
     collection: 'bookings',
     where: {
       or: [
         { cashbillPaymentId: { equals: payment.id } },
-        ...(bookingIdFromAdditional ? [{ id: { equals: bookingIdFromAdditional } }] : []),
+        ...(bookingIdFromAdditional
+          ? [
+              { id: { equals: bookingIdFromAdditional } },
+              // czasem additionalData bywa liczbą w stringu
+              ...(Number.isFinite(Number(bookingIdFromAdditional))
+                ? [{ id: { equals: Number(bookingIdFromAdditional) } }]
+                : []),
+            ]
+          : []),
       ],
     },
-    limit: 1,
+    limit: 5,
     depth: 1,
     overrideAccess: true,
   })
 
   let booking = found.docs[0]
   if (!booking) {
-    console.warn('CashBill notify: booking not found for payment', payment.id, status)
+    console.warn('CashBill notify: booking not found for payment', payment.id, status, bookingIdFromAdditional)
     return new NextResponse('OK', { status: 200 })
   }
 
   if (isPaidStatus(status)) {
-    booking = await payload.update({
-      collection: 'bookings',
-      id: booking.id,
-      data: {
-        status: 'deposit_paid',
-        paymentStatus: 'deposit_paid',
-        cashbillPaymentId: payment.id,
-        expiresAt: null,
-      },
-      depth: 1,
-      overrideAccess: true,
-    })
+    try {
+      booking = await payload.update({
+        collection: 'bookings',
+        id: booking.id,
+        data: {
+          status: 'deposit_paid',
+          paymentStatus: 'deposit_paid',
+          cashbillPaymentId: payment.id,
+          expiresAt: null,
+        },
+        depth: 1,
+        overrideAccess: true,
+      })
+    } catch (error) {
+      console.error('CashBill notify: failed to mark deposit_paid', booking.id, error)
+      return new NextResponse('Error', { status: 500 })
+    }
 
     if (!booking.gcalEventId) {
-      const eventId = await upsertBookingGoogleEvent(booking as any)
-      if (eventId) {
-        booking = await payload.update({
-          collection: 'bookings',
-          id: booking.id,
-          data: { gcalEventId: eventId },
-          depth: 1,
-          overrideAccess: true,
-        })
+      try {
+        const eventId = await upsertBookingGoogleEvent(booking as any)
+        if (eventId) {
+          booking = await payload.update({
+            collection: 'bookings',
+            id: booking.id,
+            data: { gcalEventId: eventId },
+            depth: 1,
+            overrideAccess: true,
+            context: { skipGcalSync: true },
+          })
+        }
+      } catch (error) {
+        console.error('CashBill notify: GCal sync failed', booking.id, error)
       }
     }
 
@@ -101,14 +131,18 @@ async function handleNotify(request: Request) {
       console.error('CashBill notify: confirmation email failed', error)
     }
   } else if (isFailedStatus(status) && booking.status === 'pending') {
-    await payload.update({
-      collection: 'bookings',
-      id: booking.id,
-      data: {
-        paymentStatus: 'unpaid',
-      },
-      overrideAccess: true,
-    })
+    try {
+      await payload.update({
+        collection: 'bookings',
+        id: booking.id,
+        data: {
+          paymentStatus: 'unpaid',
+        },
+        overrideAccess: true,
+      })
+    } catch (error) {
+      console.error('CashBill notify: failed to mark unpaid', booking.id, error)
+    }
   }
 
   return new NextResponse('OK', { status: 200 })

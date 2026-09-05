@@ -286,6 +286,16 @@ export const Bookings: CollectionConfig = {
       ],
     },
     {
+      name: 'cashbillSyncActions',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: {
+          Field: '/components/admin/CashbillSyncButton#CashbillSyncButton',
+        },
+      },
+    },
+    {
       name: 'cashbillPaymentId',
       type: 'text',
       label: 'CashBill Payment ID',

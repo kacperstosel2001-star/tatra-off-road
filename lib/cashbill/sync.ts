@@ -13,6 +13,14 @@ export type SyncPaymentResult = {
   gcalEventId?: string
 }
 
+export type ReconcileResult = {
+  checked: number
+  paid: number
+  failed: number
+  gcalFixed: number
+  errors: number
+}
+
 async function ensureGoogleCalendarEvent(booking: Booking): Promise<Booking> {
   if (booking.gcalEventId) return booking
   try {
@@ -25,6 +33,7 @@ async function ensureGoogleCalendarEvent(booking: Booking): Promise<Booking> {
       data: { gcalEventId: eventId },
       depth: 1,
       overrideAccess: true,
+      context: { skipGcalSync: true },
     })) as Booking
   } catch (error) {
     console.error('GCal sync after payment failed', error)
@@ -93,6 +102,13 @@ export async function syncBookingPayment(bookingId: string | number): Promise<Sy
     }
   }
 
+  console.warn('CashBill sync: payment not paid yet', {
+    bookingId: booking.id,
+    paymentId: booking.cashbillPaymentId,
+    cashbillStatus,
+    rawStatus: payment.status,
+  })
+
   if (isFailedStatus(cashbillStatus)) {
     booking = (await payload.update({
       collection: 'bookings',
@@ -107,4 +123,135 @@ export async function syncBookingPayment(bookingId: string | number): Promise<Sy
   }
 
   return { booking, cashbillStatus, paid: false, failed: false }
+}
+
+let reconcileInFlight: Promise<ReconcileResult> | null = null
+let lastReconcileAt = 0
+
+/**
+ * Automatycznie dociąga opłacone płatności z CashBill (gdy webhook nie doszedł)
+ * i dokłada brakujące eventy Google Calendar.
+ */
+export async function reconcilePendingCashBillPayments(options?: {
+  force?: boolean
+  limit?: number
+}): Promise<ReconcileResult> {
+  const force = Boolean(options?.force)
+  const now = Date.now()
+  if (!force && now - lastReconcileAt < 45_000) {
+    return { checked: 0, paid: 0, failed: 0, gcalFixed: 0, errors: 0 }
+  }
+  if (reconcileInFlight) return reconcileInFlight
+
+  reconcileInFlight = (async () => {
+    lastReconcileAt = Date.now()
+    const result: ReconcileResult = {
+      checked: 0,
+      paid: 0,
+      failed: 0,
+      gcalFixed: 0,
+      errors: 0,
+    }
+
+    try {
+      const payload = await getPayloadClient()
+      const limit = Math.min(50, Math.max(1, options?.limit ?? 25))
+
+      const pending = await payload.find({
+        collection: 'bookings',
+        where: {
+          and: [
+            { cashbillPaymentId: { exists: true } },
+            {
+              or: [
+                { status: { equals: 'pending' } },
+                { status: { equals: 'expired' } },
+                {
+                  and: [
+                    { paymentStatus: { equals: 'unpaid' } },
+                    { status: { not_equals: 'cancelled' } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        limit,
+        depth: 0,
+        overrideAccess: true,
+        sort: '-updatedAt',
+      })
+
+      for (const doc of pending.docs) {
+        result.checked += 1
+        try {
+          const synced = await syncBookingPayment(doc.id)
+          if (synced.paid) result.paid += 1
+          if (synced.failed) result.failed += 1
+        } catch (error) {
+          result.errors += 1
+          console.error('CashBill reconcile sync failed', doc.id, error)
+        }
+      }
+
+      const missingGcal = await payload.find({
+        collection: 'bookings',
+        where: {
+          and: [
+            {
+              or: [
+                { status: { equals: 'deposit_paid' } },
+                { paymentStatus: { equals: 'deposit_paid' } },
+              ],
+            },
+            {
+              or: [{ gcalEventId: { exists: false } }, { gcalEventId: { equals: null } }],
+            },
+          ],
+        },
+        limit,
+        depth: 1,
+        overrideAccess: true,
+        sort: '-updatedAt',
+      })
+
+      for (const doc of missingGcal.docs as Booking[]) {
+        result.checked += 1
+        try {
+          const before = doc.gcalEventId
+          const updated = await afterDepositPaid(doc)
+          if (!before && updated.gcalEventId) result.gcalFixed += 1
+        } catch (error) {
+          result.errors += 1
+          console.error('CashBill reconcile GCal failed', doc.id, error)
+        }
+      }
+
+      if (result.paid > 0 || result.gcalFixed > 0 || result.errors > 0) {
+        console.log('[tatra] CashBill reconcile', result)
+      }
+    } catch (error) {
+      result.errors += 1
+      console.error('[tatra] CashBill reconcile failed', error)
+    }
+
+    return result
+  })()
+
+  try {
+    return await reconcileInFlight
+  } finally {
+    reconcileInFlight = null
+  }
+}
+
+/** Fire-and-forget — nie blokuje response API. */
+export function triggerCashBillReconcileInBackground(reason: string) {
+  void reconcilePendingCashBillPayments()
+    .then((result) => {
+      if (result.paid > 0 || result.gcalFixed > 0) {
+        console.log(`[tatra] CashBill reconcile (${reason})`, result)
+      }
+    })
+    .catch((error) => console.error(`[tatra] CashBill reconcile (${reason}) failed`, error))
 }

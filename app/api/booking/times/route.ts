@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAvailableSlots } from '@/lib/booking'
+import { triggerCashBillReconcileInBackground } from '@/lib/cashbill/sync'
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
     if (!tripId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ message: 'Nieprawidłowe dane.' }, { status: 400 })
     }
+
+    // Przy okazji sprawdzania terminów — dociągnij opłacone z CashBill w tle
+    triggerCashBillReconcileInBackground('booking-times')
 
     const slots = await getAvailableSlots(tripId, date, drivers, sessionId)
     return NextResponse.json({

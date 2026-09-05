@@ -81,7 +81,7 @@ export const BookingSettings: GlobalConfig = {
           label: 'Włącz tryb LIVE (produkcja)',
           admin: {
             description:
-              'Wyłączone = test (testws). Włączone = produkcja (ws). Najpierw przetestuj na testws.',
+              'Wyłączone = test (testws). Włączone = produkcja (ws). URL powiadomień: https://tatraoffroad.pl/api/payments/cashbill/notify — wyłącz Bot Fight / Cloudflare challenge dla tej ścieżki, inaczej status nie wraca do panelu.',
           },
         },
         {

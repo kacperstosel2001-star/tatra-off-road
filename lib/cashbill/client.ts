@@ -220,29 +220,59 @@ export class CashBillClient {
 }
 
 function normalizeStatus(status: unknown): string {
-  if (status && typeof status === 'object' && 'status' in status) {
-    return normalizeStatus((status as { status: unknown }).status)
+  if (status && typeof status === 'object' && status !== null) {
+    const obj = status as Record<string, unknown>
+    if ('statusCode' in obj) return normalizeStatus(obj.statusCode)
+    if ('statusName' in obj) return normalizeStatus(obj.statusName)
+    if ('status' in obj) return normalizeStatus(obj.status)
+    if ('code' in obj) return normalizeStatus(obj.code)
   }
   return String(status || '')
     .toUpperCase()
-    .replace(/[^A-Z]/g, '')
+    .replace(/[^A-Z0-9]/g, '')
 }
 
 export function isPaidStatus(status: unknown): boolean {
   const s = normalizeStatus(status)
-  // CashBill returns PositiveFinish / PositiveAuthorization (camelCase)
-  return s === 'POSITIVEFINISH' || s === 'POSITIVEAUTHORIZATION'
+  // CashBill: PositiveFinish / PositiveAuthorization (+ warianty z panelu)
+  return (
+    s === 'POSITIVEFINISH' ||
+    s === 'POSITIVEAUTHORIZATION' ||
+    s === 'PAID' ||
+    s === 'SUCCESS' ||
+    s === 'COMPLETED' ||
+    s === 'ZAAKCEPTOWANA' ||
+    s === 'ZAKONCZONAPOZYTYWNIE'
+  )
 }
 
 export function isFailedStatus(status: unknown): boolean {
   const s = normalizeStatus(status)
-  return ['NEGATIVEFINISH', 'ABORT', 'FRAUD', 'NEGATIVEAUTHORIZATION'].includes(s)
+  return [
+    'NEGATIVEFINISH',
+    'ABORT',
+    'FRAUD',
+    'NEGATIVEAUTHORIZATION',
+    'FAILED',
+    'CANCELLED',
+    'CANCELED',
+  ].includes(s)
 }
 
 export function extractPaymentStatus(payment: CashBillPaymentDetails): string {
   const raw = payment.status as unknown
-  if (raw && typeof raw === 'object' && 'statusCode' in (raw as object)) {
-    return String((raw as { statusCode: string }).statusCode)
+  if (raw && typeof raw === 'object' && raw !== null) {
+    const obj = raw as Record<string, unknown>
+    if (obj.statusCode != null) return String(obj.statusCode)
+    if (obj.statusName != null) return String(obj.statusName)
+    if (obj.status != null) return String(obj.status)
   }
-  return String(raw || '')
+  if (raw != null && raw !== '') return String(raw)
+
+  // Niektóre odpowiedzi mają status na top-level pod innymi kluczami
+  const anyPayment = payment as CashBillPaymentDetails & Record<string, unknown>
+  for (const key of ['statusCode', 'statusName', 'paymentStatus']) {
+    if (anyPayment[key] != null && anyPayment[key] !== '') return String(anyPayment[key])
+  }
+  return ''
 }
