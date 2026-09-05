@@ -138,7 +138,8 @@ export async function reconcilePendingCashBillPayments(options?: {
 }): Promise<ReconcileResult> {
   const force = Boolean(options?.force)
   const now = Date.now()
-  if (!force && now - lastReconcileAt < 45_000) {
+  // Max co 2 min przy force z crona/intervalu — chroni przed nakładaniem się ticków
+  if (!force && now - lastReconcileAt < 120_000) {
     return { checked: 0, paid: 0, failed: 0, gcalFixed: 0, errors: 0 }
   }
   if (reconcileInFlight) return reconcileInFlight
@@ -155,75 +156,105 @@ export async function reconcilePendingCashBillPayments(options?: {
 
     try {
       const payload = await getPayloadClient()
-      const limit = Math.min(50, Math.max(1, options?.limit ?? 25))
+      const limit = Math.min(20, Math.max(1, options?.limit ?? 10))
 
-      const pending = await payload.find({
-        collection: 'bookings',
-        where: {
-          and: [
-            { cashbillPaymentId: { exists: true } },
-            {
-              or: [
-                { status: { equals: 'pending' } },
-                { status: { equals: 'expired' } },
-                {
-                  and: [
-                    { paymentStatus: { equals: 'unpaid' } },
-                    { status: { not_equals: 'cancelled' } },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        limit,
-        depth: 0,
-        overrideAccess: true,
-        sort: '-updatedAt',
-      })
+      const pendingWhere = {
+        and: [
+          { cashbillPaymentId: { exists: true } },
+          {
+            or: [
+              { status: { equals: 'pending' } },
+              { status: { equals: 'expired' } },
+              {
+                and: [
+                  { paymentStatus: { equals: 'unpaid' } },
+                  { status: { not_equals: 'cancelled' } },
+                ],
+              },
+            ],
+          },
+        ],
+      }
 
-      for (const doc of pending.docs) {
-        result.checked += 1
-        try {
-          const synced = await syncBookingPayment(doc.id)
-          if (synced.paid) result.paid += 1
-          if (synced.failed) result.failed += 1
-        } catch (error) {
-          result.errors += 1
-          console.error('CashBill reconcile sync failed', doc.id, error)
+      const missingGcalWhere = {
+        and: [
+          {
+            or: [
+              { status: { equals: 'deposit_paid' } },
+              { paymentStatus: { equals: 'deposit_paid' } },
+            ],
+          },
+          {
+            or: [{ gcalEventId: { exists: false } }, { gcalEventId: { equals: null } }],
+          },
+        ],
+      }
+
+      // Tani check — jak nic nie czeka, zero requestów do CashBill
+      const [pendingProbe, gcalProbe] = await Promise.all([
+        payload.find({
+          collection: 'bookings',
+          where: pendingWhere as any,
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+        }),
+        payload.find({
+          collection: 'bookings',
+          where: missingGcalWhere as any,
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+        }),
+      ])
+
+      if (pendingProbe.totalDocs === 0 && gcalProbe.totalDocs === 0) {
+        return result
+      }
+
+      if (pendingProbe.totalDocs > 0) {
+        const pending = await payload.find({
+          collection: 'bookings',
+          where: pendingWhere as any,
+          limit,
+          depth: 0,
+          overrideAccess: true,
+          sort: '-updatedAt',
+        })
+
+        for (const doc of pending.docs) {
+          result.checked += 1
+          try {
+            const synced = await syncBookingPayment(doc.id)
+            if (synced.paid) result.paid += 1
+            if (synced.failed) result.failed += 1
+          } catch (error) {
+            result.errors += 1
+            console.error('CashBill reconcile sync failed', doc.id, error)
+          }
         }
       }
 
-      const missingGcal = await payload.find({
-        collection: 'bookings',
-        where: {
-          and: [
-            {
-              or: [
-                { status: { equals: 'deposit_paid' } },
-                { paymentStatus: { equals: 'deposit_paid' } },
-              ],
-            },
-            {
-              or: [{ gcalEventId: { exists: false } }, { gcalEventId: { equals: null } }],
-            },
-          ],
-        },
-        limit,
-        depth: 1,
-        overrideAccess: true,
-        sort: '-updatedAt',
-      })
+      if (gcalProbe.totalDocs > 0) {
+        const missingGcal = await payload.find({
+          collection: 'bookings',
+          where: missingGcalWhere as any,
+          limit,
+          depth: 1,
+          overrideAccess: true,
+          sort: '-updatedAt',
+        })
 
-      for (const doc of missingGcal.docs as Booking[]) {
-        result.checked += 1
-        try {
-          const before = doc.gcalEventId
-          const updated = await afterDepositPaid(doc)
-          if (!before && updated.gcalEventId) result.gcalFixed += 1
-        } catch (error) {
-          result.errors += 1
-          console.error('CashBill reconcile GCal failed', doc.id, error)
+        for (const doc of missingGcal.docs as Booking[]) {
+          result.checked += 1
+          try {
+            const before = doc.gcalEventId
+            const updated = await afterDepositPaid(doc)
+            if (!before && updated.gcalEventId) result.gcalFixed += 1
+          } catch (error) {
+            result.errors += 1
+            console.error('CashBill reconcile GCal failed', doc.id, error)
+          }
         }
       }
 
