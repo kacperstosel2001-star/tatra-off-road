@@ -73,7 +73,8 @@ function useCountdown(expiresAt?: string | null) {
 }
 
 export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; lang?: string }) {
-  const ui = bookingUi(lang).checkout
+  const copy = bookingUi(lang)
+  const ui = copy.checkout
   const searchParams = useSearchParams()
   const [booking, setBooking] = useState<BookingPayload | null>(null)
   const [loading, setLoading] = useState(true)
@@ -270,6 +271,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             <span className="text-stone">{ui.remainingLabel}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
+          <p className="m-0 pb-3 text-[13px] text-stone leading-snug">{copy.onSiteCashOnly}</p>
         </div>
 
         {done ? (
@@ -399,6 +401,7 @@ export function CheckoutClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             <span>{ui.remainingLabel}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
+          <p className="m-0 text-[12px] leading-snug opacity-70">{copy.onSiteCashOnly}</p>
         </div>
         <ul className="mt-6 mb-0 pl-4 text-[13px] opacity-75 grid gap-2">
           <li>{ui.afterPay}</li>

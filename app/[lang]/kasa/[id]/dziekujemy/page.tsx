@@ -43,8 +43,8 @@ export default async function ThankYouPage({
           title={isEn ? 'Thank you' : 'Dziękujemy'}
           description={
             isEn
-              ? 'Booking confirmation and payment summary.'
-              : 'Potwierdzenie rezerwacji i podsumowanie płatności.'
+              ? 'Booking confirmation. Remaining amount due on site — cash only.'
+              : 'Potwierdzenie rezerwacji. Resztę kwoty zapłacisz na miejscu — tylko gotówką.'
           }
           breadcrumbs={[
             { label: dict.breadcrumbs.home, href: localePath(lang, '/') },

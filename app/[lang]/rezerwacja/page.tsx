@@ -36,8 +36,8 @@ export default async function BookingPage({ params }: { params: Promise<{ lang: 
           title={locale === 'en' ? 'Booking' : 'Rezerwacja'}
           description={
             locale === 'en'
-              ? 'Trip → riders → date & time → details. Deposit at checkout.'
-              : 'Wyprawa → uczestnicy → termin → dane. Zaliczkę opłacisz w kasie.'
+              ? 'Trip → riders → date & time → details. Deposit online — remainder on site, cash only.'
+              : 'Wyprawa → uczestnicy → termin → dane. Zaliczkę online — resztę na miejscu tylko gotówką.'
           }
           breadcrumbs={[
             { label: dict.breadcrumbs.home, href: localePath(locale, '/') },

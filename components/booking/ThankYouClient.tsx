@@ -42,7 +42,8 @@ function formatDate(value: string) {
 }
 
 export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; lang?: string }) {
-  const ui = bookingUi(lang).thanks
+  const copy = bookingUi(lang)
+  const ui = copy.thanks
   const [booking, setBooking] = useState<BookingPayload | null>(null)
   const [paid, setPaid] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -247,6 +248,9 @@ export function ThankYouClient({ bookingId, lang = 'pl' }: { bookingId: string; 
             <span>{ui.remaining}</span>
             <strong>{booking.remainingAmount ?? 0} zł</strong>
           </div>
+          <p className="m-0 border-b border-stone-line pb-3 text-[13px] text-stone leading-snug">
+            {copy.onSiteCashOnly}
+          </p>
           <div className="flex justify-between py-3">
             <span>{ui.fullPrice}</span>
             <strong>{booking.fullPrice ?? 0} zł</strong>

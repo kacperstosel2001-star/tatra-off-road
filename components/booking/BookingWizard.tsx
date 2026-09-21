@@ -675,6 +675,7 @@ export function BookingWizard({ lang = 'pl', dict }: { lang?: string; dict?: any
                 <span>{ui.onSite}</span>
                 <strong>{previewPrice.remaining} zł</strong>
               </div>
+              <p className="m-0 text-[12px] leading-snug opacity-75">{ui.onSiteCashOnly}</p>
             </div>
           ) : null}
 

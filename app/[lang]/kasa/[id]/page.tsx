@@ -47,8 +47,8 @@ export default async function CheckoutPage({
           title={isEn ? 'Checkout' : 'Kasa'}
           description={
             isEn
-              ? 'Pay the deposit by BLIK or bank transfer. The rest is paid on site.'
-              : 'Opłać zaliczkę BLIK-iem lub przelewem. Resztę zapłacisz na miejscu.'
+              ? 'Pay the deposit by BLIK or bank transfer. The rest is paid on site — cash only.'
+              : 'Opłać zaliczkę BLIK-iem lub przelewem. Resztę na miejscu — tylko gotówką.'
           }
           breadcrumbs={[
             { label: dict.breadcrumbs.home, href: localePath(lang, '/') },
