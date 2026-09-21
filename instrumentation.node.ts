@@ -1,9 +1,8 @@
-import { applyInitialSchema } from './lib/db/ensure-schema'
-
 /** Co 5 min — wystarczy na opóźniony webhook, bez zbędnego obciążenia. */
 const RECONCILE_MS = 5 * 60 * 1000
 
 export async function runNodeInstrumentation() {
+  const { applyInitialSchema } = await import('./lib/db/ensure-schema')
   console.log('[tatra] applying postgres schema...')
   await applyInitialSchema()
   console.log('[tatra] postgres schema ready')
